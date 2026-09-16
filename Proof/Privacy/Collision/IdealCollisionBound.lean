@@ -66,7 +66,7 @@ def XPublicSample.visibleHiddenEquiv :
   right_inv _ := rfl
 
 def YPublicSample.visibleHiddenEquiv :
-    YPublicSample ≃ VisibleGateSample 4 4 × HiddenGateSample 4 where
+    YPublicSample ≃ VisibleGateSample 4 3 × HiddenGateSample 3 where
   toFun sample := ((sample.coefficients, sample.tables), (sample.targets, sample.quotients))
   invFun pair := {
     coefficients := pair.1.1
@@ -88,9 +88,9 @@ def ZPublicSample.visibleHiddenEquiv :
   right_inv _ := rfl
 
 abbrev VisibleRowSample :=
-  VisibleGateSample 5 4 × VisibleGateSample 4 4 × VisibleGateSample 5 5
+  VisibleGateSample 5 4 × VisibleGateSample 4 3 × VisibleGateSample 5 5
 
-abbrev HiddenRowSample := HiddenGateSample 4 × HiddenGateSample 4 × HiddenGateSample 5
+abbrev HiddenRowSample := HiddenGateSample 4 × HiddenGateSample 3 × HiddenGateSample 5
 
 def RowPublicSample.visibleHiddenEquiv :
     RowPublicSample ≃ VisibleRowSample × HiddenRowSample where
@@ -279,6 +279,36 @@ theorem uniform_affine_nestedCoordinate
   simp_rw [uniform_subtract_field]
   exact PMF.bind_const _ _
 
+/-- The coefficient minus two gives an exact uniform target marginal. -/
+theorem uniform_double_nestedCoordinate
+    {Rows Positions : Type*} [Fintype Rows] [Fintype Positions]
+    [DecidableEq Rows] [DecidableEq Positions] (row : Rows) (position : Positions)
+    (target : (Rows → Positions → BaseField) → BaseField)
+    (shift : ∀ values seed,
+      target (Function.update values row (Function.update (values row) position seed)) =
+        target values + 2 * values row position - 2 * seed) :
+    (PMF.uniformOfFintype (Rows → Positions → BaseField)).map target =
+      PMF.uniformOfFintype BaseField := by
+  have law := congrArg (fun distribution => distribution.map (target ∘ Prod.fst))
+    (map_uniformOfFintype_equivBetween (swapNestedSeed row position))
+  rw [PMF.map_comp] at law
+  have right : (PMF.uniformOfFintype ((Rows → Positions → BaseField) × BaseField)).map
+      (target ∘ Prod.fst) =
+        (PMF.uniformOfFintype (Rows → Positions → BaseField)).map target := by
+    rw [← PMF.map_comp, map_uniform_prod_fst]
+  rw [right] at law
+  rw [← law, uniform_prod_eq_bind, PMF.map_bind]
+  simp only [PMF.map_comp, Function.comp_def, swapNestedSeed,
+    Function.Involutive.coe_toPerm]
+  simp_rw [shift]
+  simp only [PMF.map, Function.comp_def]
+  rw [PMF.bind_comm]
+  change ((PMF.uniformOfFintype (Rows → Positions → BaseField)).bind fun values =>
+    (PMF.uniformOfFintype BaseField).map
+      (fun seed => target values + 2 * values row position - 2 * seed)) = _
+  simp_rw [uniform_subtract_double_field]
+  exact PMF.bind_const _ _
+
 local instance collisionCoordinateNeZero : NeZero coordinateBitCount := ⟨by decide⟩
 
 /-- The full uniform target tape gives a uniform actual pivot. -/
@@ -295,10 +325,10 @@ theorem XPublicSample.pivot_uniform_targets (sample : XPublicSample)
 /-- The full uniform target tape gives a uniform actual pivot. -/
 theorem YPublicSample.pivot_uniform_targets (sample : YPublicSample)
     (input : AffineInput) (target : BaseField) :
-    (PMF.uniformOfFintype (Fin 4 → Fin coordinateBitCount → BaseField)).map
+    (PMF.uniformOfFintype (Fin 3 → Fin coordinateBitCount → BaseField)).map
       (fun values => (({sample with targets := values} : YPublicSample).request.retarget
         input target).x9Targets 0) = PMF.uniformOfFintype BaseField := by
-  apply uniform_affine_nestedCoordinate 1 0
+  apply uniform_double_nestedCoordinate 2 1
   intro values seed
   exact YPublicSample.pivot_seed ({sample with targets := values} : YPublicSample)
     input target seed
@@ -375,11 +405,11 @@ theorem XPublicSample.target_uniform (sample : XPublicSample)
 /-- Every actual retargeted coordinate has a uniform field marginal. -/
 theorem YPublicSample.target_uniform (sample : YPublicSample)
     (input : AffineInput) (target : BaseField)
-    (gate : Fin 4) (position : Fin coordinateBitCount) :
-    (PMF.uniformOfFintype (Fin 4 → Fin coordinateBitCount → BaseField)).map
+    (gate : Fin 3) (position : Fin coordinateBitCount) :
+    (PMF.uniformOfFintype (Fin 3 → Fin coordinateBitCount → BaseField)).map
       (fun values => (({sample with targets := values} : YPublicSample).retargetMask
         input target).targets gate position) = PMF.uniformOfFintype BaseField := by
-  by_cases pivot : gate = 3 ∧ position = 0
+  by_cases pivot : gate = 2 ∧ position = 0
   · rcases pivot with ⟨rfl, rfl⟩
     exact YPublicSample.pivot_uniform_targets sample input target
   · have unchanged : ∀ values,
@@ -387,7 +417,7 @@ theorem YPublicSample.target_uniform (sample : YPublicSample)
           gate position = values gate position := by
       intro values
       simp only [YPublicSample.retargetMask]
-      by_cases same : gate = 3
+      by_cases same : gate = 2
       · subst gate
         rw [Function.update_self]
         exact retargetBits_free _ _ position (by simpa using pivot)
@@ -500,16 +530,16 @@ theorem XPublicSample.target_quotient_uniform (visible : VisibleGateSample 5 4)
     (uniform_nested_quotient_eval gate position)
 
 /-- A selected field target keeps its independent uniform hash quotient. -/
-theorem YPublicSample.target_quotient_uniform (visible : VisibleGateSample 4 4)
+theorem YPublicSample.target_quotient_uniform (visible : VisibleGateSample 4 3)
     (input : AffineInput) (target : BaseField)
-    (gate : Fin 4) (position : Fin coordinateBitCount) :
-    (PMF.uniformOfFintype (HiddenGateSample 4)).map (fun hidden =>
+    (gate : Fin 3) (position : Fin coordinateBitCount) :
+    (PMF.uniformOfFintype (HiddenGateSample 3)).map (fun hidden =>
       ((YPublicSample.visibleHiddenEquiv.symm (visible, hidden)).retargetMask
         input target |>.targets gate position, hidden.2 gate position)) =
           PMF.uniformOfFintype (BaseField × HashLiftQuotient) := by
   let sample := YPublicSample.visibleHiddenEquiv.symm
     (visible, (fun _ _ => 0), (fun _ _ => defaultHashLiftQuotient))
-  have functions : (fun hidden : HiddenGateSample 4 =>
+  have functions : (fun hidden : HiddenGateSample 3 =>
       ((YPublicSample.visibleHiddenEquiv.symm (visible, hidden)).retargetMask
         input target |>.targets gate position, hidden.2 gate position)) =
       (fun hidden => ((({sample with targets := hidden.1} : YPublicSample).retargetMask
@@ -519,8 +549,8 @@ theorem YPublicSample.target_quotient_uniform (visible : VisibleGateSample 4 4)
       YPublicSample.request, BiquadraticYRequest.result, Equiv.coe_fn_symm_mk]
   rw [functions]
   exact uniform_product_map
-    (A := Fin 4 → Fin coordinateBitCount → BaseField)
-    (B := Fin 4 → Fin coordinateBitCount → HashLiftQuotient)
+    (A := Fin 3 → Fin coordinateBitCount → BaseField)
+    (B := Fin 3 → Fin coordinateBitCount → HashLiftQuotient)
     (C := BaseField) (D := HashLiftQuotient)
     (fun values => (({sample with targets := values} : YPublicSample).retargetMask
       input target).targets gate position)
@@ -587,7 +617,7 @@ theorem CurvePublicSample.target_quotient_uniform (visible : VisibleGateSample 3
     (uniform_nested_quotient_eval gate position)
 
 /-- This index contains exactly the thirteen point adaptor families. -/
-abbrev PointGateFamily := Fin 4 ⊕ Fin 4 ⊕ Fin 5
+abbrev PointGateFamily := Fin 4 ⊕ Fin 3 ⊕ Fin 5
 
 def RowPublicSample.gateTargetQuotient (sample : RowPublicSample)
     (family : PointGateFamily) (position : Fin coordinateBitCount) :
@@ -615,14 +645,14 @@ theorem RowPublicSample.target_quotient_uniform (visible : VisibleRowSample)
   | inl gate =>
     have law := XPublicSample.target_quotient_uniform visible.1 input target.x gate position
     rw [← map_uniform_prod_fst (First := HiddenGateSample 4)
-      (Second := HiddenGateSample 4 × HiddenGateSample 5), PMF.map_comp] at law
+      (Second := HiddenGateSample 3 × HiddenGateSample 5), PMF.map_comp] at law
     exact law
   | inr family =>
     cases family with
     | inl gate =>
       have projection := congrArg (fun distribution => distribution.map Prod.fst)
         (map_uniform_prod_snd (First := HiddenGateSample 4)
-          (Second := HiddenGateSample 4 × HiddenGateSample 5))
+          (Second := HiddenGateSample 3 × HiddenGateSample 5))
       rw [PMF.map_comp, map_uniform_prod_fst] at projection
       have law := YPublicSample.target_quotient_uniform visible.2.1 input target.y gate position
       rw [← projection, PMF.map_comp] at law
@@ -630,7 +660,7 @@ theorem RowPublicSample.target_quotient_uniform (visible : VisibleRowSample)
     | inr gate =>
       have projection := congrArg (fun distribution => distribution.map Prod.snd)
         (map_uniform_prod_snd (First := HiddenGateSample 4)
-          (Second := HiddenGateSample 4 × HiddenGateSample 5))
+          (Second := HiddenGateSample 3 × HiddenGateSample 5))
       rw [PMF.map_comp, map_uniform_prod_snd] at projection
       have law := ZPublicSample.target_quotient_uniform visible.2.2 input target.z gate position
       rw [← projection, PMF.map_comp] at law
@@ -780,16 +810,15 @@ theorem XPublicSample.branchTarget_uniform (sample : XPublicSample)
 
 /-- These slopes invert the actual Y selected-mask map. -/
 def YPublicSample.branchSlope (sample : YPublicSample)
-    (coefficients : Fin 3 → BaseField) (input : AffineInput) : Fin 4 → BaseField :=
+    (coefficients : Fin 3 → BaseField) (input : AffineInput) : Fin 3 → BaseField :=
   let r := fun index => sample.coefficients index.succ - coefficients index
-  let y8 := (maskShiftEquiv (-r 2) input.y).symm (sample.targets 0)
-  let x7 := (maskShiftEquiv (-r 1) input.x).symm (sample.targets 2)
-  ![-r 2, -DigitAdaptor.fromBits y8, -r 1, -(r 0 + DigitAdaptor.fromBits x7)]
+  let y8 := (maskShiftEquiv (-r 2) input.x).symm (sample.targets 0)
+  let x7 := (maskShiftEquiv (-(r 1 + DigitAdaptor.fromBits y8)) input.x).symm (sample.targets 1)
+  ![-r 2, -(r 1 + DigitAdaptor.fromBits y8), -(r 0 + DigitAdaptor.fromBits x7)]
 
-/-- Each Y slope excludes its own target row. -/
 theorem YPublicSample.branchSlope_own (sample : YPublicSample)
     (coefficients : Fin 3 → BaseField) (input : AffineInput)
-    (gate : Fin 4) (values : Fin coordinateBitCount → BaseField) :
+    (gate : Fin 3) (values : Fin coordinateBitCount → BaseField) :
     ({sample with targets := Function.update sample.targets gate values} : YPublicSample).branchSlope
       coefficients input gate = sample.branchSlope coefficients input gate := by
   fin_cases gate <;> simp [YPublicSample.branchSlope]
@@ -797,14 +826,14 @@ theorem YPublicSample.branchSlope_own (sample : YPublicSample)
 /-- Every Y slope excludes the free pivot seed row. -/
 theorem YPublicSample.branchSlope_seed (sample : YPublicSample)
     (coefficients : Fin 3 → BaseField) (input : AffineInput)
-    (gate : Fin 4) (values : Fin coordinateBitCount → BaseField) :
-    ({sample with targets := Function.update sample.targets 1 values} : YPublicSample).branchSlope
+    (gate : Fin 3) (values : Fin coordinateBitCount → BaseField) :
+    ({sample with targets := Function.update sample.targets 2 values} : YPublicSample).branchSlope
       coefficients input gate = sample.branchSlope coefficients input gate := by
   simp [YPublicSample.branchSlope]
 
 /-- These targets specify either actual branch for one Y gate. -/
 def YPublicSample.branchTarget (sample : YPublicSample) (coefficients : Fin 3 → BaseField)
-    (input : AffineInput) (target : BaseField) (gate : Fin 4)
+    (input : AffineInput) (target : BaseField) (gate : Fin 3)
     (position : Fin coordinateBitCount) (selected branch : Bool) : BaseField :=
   (sample.retargetMask input target).targets gate position +
     (if branch then sample.branchSlope coefficients input gate else 0) -
@@ -813,23 +842,23 @@ def YPublicSample.branchTarget (sample : YPublicSample) (coefficients : Fin 3 �
 /-- Both Y branch targets have uniform field marginals. -/
 theorem YPublicSample.branchTarget_uniform (sample : YPublicSample)
     (coefficients : Fin 3 → BaseField) (input : AffineInput) (target : BaseField)
-    (gate : Fin 4) (position : Fin coordinateBitCount) (selected branch : Bool) :
-    (PMF.uniformOfFintype (Fin 4 → Fin coordinateBitCount → BaseField)).map
+    (gate : Fin 3) (position : Fin coordinateBitCount) (selected branch : Bool) :
+    (PMF.uniformOfFintype (Fin 3 → Fin coordinateBitCount → BaseField)).map
       (fun values => ({sample with targets := values} : YPublicSample).branchTarget
         coefficients input target gate position selected branch) = PMF.uniformOfFintype BaseField := by
-  by_cases pivot : gate = 3 ∧ position = 0
+  by_cases pivot : gate = 2 ∧ position = 0
   · rcases pivot with ⟨rfl, rfl⟩
-    apply uniform_affine_nestedCoordinate 1 0
+    apply uniform_double_nestedCoordinate 2 1
     intro values seed
     have targetLaw := YPublicSample.pivot_seed
       ({sample with targets := values} : YPublicSample) input target seed
-    change (({sample with targets := (Function.update values 1
-        (Function.update (values 1) 0 seed))} : YPublicSample).retargetMask input target).targets 3 0 =
-      (({sample with targets := values} : YPublicSample).retargetMask input target).targets 3 0 +
-        values 1 0 - seed at targetLaw
+    change (({sample with targets := (Function.update values 2
+        (Function.update (values 2) 1 seed))} : YPublicSample).retargetMask input target).targets 2 0 =
+      (({sample with targets := values} : YPublicSample).retargetMask input target).targets 2 0 +
+        2 * values 2 1 - 2 * seed at targetLaw
     have slopeLaw := YPublicSample.branchSlope_seed
-      ({sample with targets := values} : YPublicSample) coefficients input 3
-      (Function.update (values 1) 0 seed)
+      ({sample with targets := values} : YPublicSample) coefficients input 2
+      (Function.update (values 2) 1 seed)
     simp only [YPublicSample.branchTarget]
     rw [targetLaw, slopeLaw]
     ring
@@ -838,7 +867,7 @@ theorem YPublicSample.branchTarget_uniform (sample : YPublicSample)
           gate position = values gate position := by
       intro values
       simp only [YPublicSample.retargetMask]
-      by_cases same : gate = 3
+      by_cases same : gate = 2
       · subst gate
         rw [Function.update_self]
         have nonzero : position ≠ 0 := by simpa using pivot
@@ -1026,13 +1055,13 @@ theorem XPublicSample.branchTarget_false_source (sample : XPublicSample)
 /-- The Y false target is the actual reconstructed mask entry. -/
 theorem YPublicSample.branchTarget_false_source (sample : YPublicSample)
     (coefficients : Fin 3 → BaseField) (input : AffineInput) (target : BaseField)
-    (gate : Fin 4) (position : Fin coordinateBitCount) :
+    (gate : Fin 3) (position : Fin coordinateBitCount) :
     sample.branchTarget coefficients input target gate position
-      (coordinateValues (if gate.val < 2 then input.y else input.x) position) false =
+      (coordinateValues input.x position) false =
       ((yMaskSelectedEquiv coefficients input).symm
         ((fun index => sample.coefficients index.succ),
           (sample.retargetMask input target).targets)).2 gate position := by
-  dsimp only [yMaskSelectedEquiv]
+  dsimp only [yMaskSelectedEquiv, CubicMasks.selectedEquiv, cubicYParameters, CubicMasks.coefficients]
   fin_cases gate <;>
     dsimp only [YPublicSample.branchTarget, YPublicSample.branchSlope, maskShiftEquiv,
       Equiv.coe_fn_symm_mk, Equiv.symm, Equiv.coe_fn_mk]
@@ -1081,7 +1110,7 @@ theorem XPublicSample.branchTarget_true (sample : XPublicSample)
 /-- The true target adds the actual branch slope to the false target. -/
 theorem YPublicSample.branchTarget_true (sample : YPublicSample)
     (coefficients : Fin 3 → BaseField) (input : AffineInput) (target : BaseField)
-    (gate : Fin 4) (position : Fin coordinateBitCount) (selected : Bool) :
+    (gate : Fin 3) (position : Fin coordinateBitCount) (selected : Bool) :
     sample.branchTarget coefficients input target gate position selected true =
       sample.branchTarget coefficients input target gate position selected false +
         sample.branchSlope coefficients input gate := by
@@ -1139,16 +1168,16 @@ theorem XPublicSample.branchTarget_quotient_uniform
 
 /-- Each actual branch field keeps its independent uniform hash quotient. -/
 theorem YPublicSample.branchTarget_quotient_uniform
-    (visible : VisibleGateSample 4 4) (coefficients : Fin 3 → BaseField)
-    (input : AffineInput) (target : BaseField) (gate : Fin 4)
+    (visible : VisibleGateSample 4 3) (coefficients : Fin 3 → BaseField)
+    (input : AffineInput) (target : BaseField) (gate : Fin 3)
     (position : Fin coordinateBitCount) (selected branch : Bool) :
-    (PMF.uniformOfFintype (HiddenGateSample 4)).map (fun hidden =>
+    (PMF.uniformOfFintype (HiddenGateSample 3)).map (fun hidden =>
       ((YPublicSample.visibleHiddenEquiv.symm (visible, hidden)).branchTarget
         coefficients input target gate position selected branch, hidden.2 gate position)) =
           PMF.uniformOfFintype (BaseField × HashLiftQuotient) := by
   let sample := YPublicSample.visibleHiddenEquiv.symm
     (visible, (fun _ _ => 0), (fun _ _ => defaultHashLiftQuotient))
-  have functions : (fun hidden : HiddenGateSample 4 =>
+  have functions : (fun hidden : HiddenGateSample 3 =>
       ((YPublicSample.visibleHiddenEquiv.symm (visible, hidden)).branchTarget
         coefficients input target gate position selected branch, hidden.2 gate position)) =
       (fun hidden => (({sample with targets := hidden.1} : YPublicSample).branchTarget
@@ -1156,8 +1185,8 @@ theorem YPublicSample.branchTarget_quotient_uniform
     rfl
   rw [functions]
   exact uniform_product_map
-    (A := Fin 4 → Fin coordinateBitCount → BaseField)
-    (B := Fin 4 → Fin coordinateBitCount → HashLiftQuotient)
+    (A := Fin 3 → Fin coordinateBitCount → BaseField)
+    (B := Fin 3 → Fin coordinateBitCount → HashLiftQuotient)
     (C := BaseField) (D := HashLiftQuotient)
     (fun values => ({sample with targets := values} : YPublicSample).branchTarget
       coefficients input target gate position selected branch)
@@ -1236,7 +1265,7 @@ def RowPublicSample.branchTargetQuotient (sample : RowPublicSample) (rows : Coor
   | .inr (.inl gate) =>
       (sample.y.branchTarget ![rows.y.x, rows.y.xSquared, rows.y.ySquared]
         input target.y gate position
-        (coordinateValues (if gate.val < 2 then input.y else input.x) position) branch,
+        (coordinateValues input.x position) branch,
         sample.y.quotients gate position)
   | .inr (.inr gate) =>
       (sample.z.branchTarget ![rows.z.y, rows.z.xy, rows.z.xSquared, rows.z.ySquared]
@@ -1258,24 +1287,24 @@ theorem RowPublicSample.branchTarget_quotient_uniform (visible : VisibleRowSampl
       ![rows.x.x, rows.x.y, rows.x.xy, rows.x.ySquared] input target.x gate position
       (coordinateValues (if gate = 3 then input.x else input.y) position) branch
     rw [← map_uniform_prod_fst (First := HiddenGateSample 4)
-      (Second := HiddenGateSample 4 × HiddenGateSample 5), PMF.map_comp] at law
+      (Second := HiddenGateSample 3 × HiddenGateSample 5), PMF.map_comp] at law
     exact law
   | inr family =>
     cases family with
     | inl gate =>
       have projection := congrArg (fun distribution => distribution.map Prod.fst)
         (map_uniform_prod_snd (First := HiddenGateSample 4)
-          (Second := HiddenGateSample 4 × HiddenGateSample 5))
+          (Second := HiddenGateSample 3 × HiddenGateSample 5))
       rw [PMF.map_comp, map_uniform_prod_fst] at projection
       have law := YPublicSample.branchTarget_quotient_uniform visible.2.1
         ![rows.y.x, rows.y.xSquared, rows.y.ySquared] input target.y gate position
-        (coordinateValues (if gate.val < 2 then input.y else input.x) position) branch
+        (coordinateValues input.x position) branch
       rw [← projection, PMF.map_comp] at law
       exact law
     | inr gate =>
       have projection := congrArg (fun distribution => distribution.map Prod.snd)
         (map_uniform_prod_snd (First := HiddenGateSample 4)
-          (Second := HiddenGateSample 4 × HiddenGateSample 5))
+          (Second := HiddenGateSample 3 × HiddenGateSample 5))
       rw [PMF.map_comp, map_uniform_prod_snd] at projection
       have law := ZPublicSample.branchTarget_quotient_uniform visible.2.2
         ![rows.z.y, rows.z.xy, rows.z.xSquared, rows.z.ySquared] input target.z gate position
@@ -1330,7 +1359,7 @@ def PointGateFamily.selectedBit (family : PointGateFamily) (input : AffineInput)
     (position : Fin coordinateBitCount) : Bool :=
   match family with
   | .inl gate => coordinateValues (if gate = 3 then input.x else input.y) position
-  | .inr (.inl gate) => coordinateValues (if gate.val < 2 then input.y else input.x) position
+  | .inr (.inl gate) => coordinateValues input.x position
   | .inr (.inr gate) => coordinateValues (if gate.val < 3 then input.y else input.x) position
 
 /-- The selected branch offset is the actual programmed block. -/
@@ -1585,13 +1614,13 @@ theorem pointBranchCollision_mass_le_blocks [Fintype Block]
       FieldMacToECMac.HomogeneousValue) :
     (PMF.uniformOfFintype (Fin FieldMacToECMac.outputMacCount → HiddenRowSample)).toOuterMeasure
       {hidden | pointBranchCollision visible rows input targets hidden} ≤
-        243390420 / (2 : ENNReal) ^ 128 := by
+        224668080 / (2 : ENNReal) ^ 128 := by
   have bound := @pointBranchCollision_mass_le ‹Fintype Block› visible rows input targets
   apply bound.trans
   simp only [Finset.sum_const, Finset.card_univ, pointRowPair_card, nsmul_eq_mul,
     ← Finset.mul_sum, Fintype.card_fin]
   have bound := mul_le_mul_right activeSlotDensity_sum_le
-    (13 * 254 * 4095 : ENNReal)
+    (12 * 254 * 4095 : ENNReal)
   convert bound using 1 <;>
     norm_num [PointGateFamily, coordinateBitCount, Fintype.card_sum, Fintype.card_fin,
       mul_assoc, ← mul_div_assoc] <;> first | rfl | ring
@@ -1613,13 +1642,13 @@ theorem pointBranchCollision_fullTape_mass_le_blocks [Fintype Block]
       FieldMacToECMac.HomogeneousValue) :
     (PMF.uniformOfFintype HiddenPublicSample).toOuterMeasure
       {hidden | pointBranchCollision visible rows input targets hidden.2} ≤
-        243390420 / (2 : ENNReal) ^ 128 := by
+        224668080 / (2 : ENNReal) ^ 128 := by
   have bound := @pointBranchCollision_mass_le_blocks ‹Fintype Block› visible rows input targets
   have lifted := uniform_snd_event_le
     (A := HiddenGateSample 5) (B := Fin FieldMacToECMac.outputMacCount → HiddenRowSample)
     {hidden | pointBranchCollision visible rows input targets hidden}
     {hidden | pointBranchCollision visible rows input targets hidden.2}
-    (243390420 / (2 : ENNReal) ^ 128) rfl bound
+    (224668080 / (2 : ENNReal) ^ 128) rfl bound
   dsimp only [HiddenPublicSample]
   exact lifted
 
@@ -1740,12 +1769,12 @@ private theorem pointBranchEvent_mass_le [Fintype Block]
     (input : AffineInput) (online : CircuitOnlineCoin) (point : Point) :
     (PMF.uniformOfFintype HiddenPublicSample).toOuterMeasure
       {hidden | pointBranchEvent visible rows input online point hidden} ≤
-        243390420 / (2 : ENNReal) ^ 128 := by
+        224668080 / (2 : ENNReal) ^ 128 := by
   have events : {hidden | pointBranchEvent visible rows input online point hidden} =
       {hidden | pointBranchCollision visible rows input (pointBranchTargets point online) hidden.2} := rfl
   have law := congrArg (fun event : Set HiddenPublicSample =>
     (PMF.uniformOfFintype HiddenPublicSample).toOuterMeasure event ≤
-      243390420 / (2 : ENNReal) ^ 128) events
+      224668080 / (2 : ENNReal) ^ 128) events
   exact Eq.mpr law (@pointBranchCollision_fullTape_mass_le_blocks ‹Fintype Block›
     visible rows input (pointBranchTargets point online))
 
@@ -1779,13 +1808,13 @@ private theorem idealPointBranchFinish_mass_le [Fintype Block]
     (selected : (AffineInput × adversary.State) × SimulatorState × List (Sigma Garbling.oracleSpec.Answer))
     (online : CircuitOnlineCoin) (rows : Fin FieldMacToECMac.outputMacCount → Coordinates.Rows) :
     (idealPointBranchFinish adversary scalar construction visible selected online rows).toOuterMeasure
-      {flag | flag = true} ≤ 243390420 / (2 : ENNReal) ^ 128 := by
+      {flag | flag = true} ≤ 224668080 / (2 : ENNReal) ^ 128 := by
   dsimp only [idealPointBranchFinish]
   have bound := option_decide_mass_le (Source := HiddenPublicSample) (Value := Point)
     (PMF.uniformOfFintype HiddenPublicSample)
     ((Garbling.garbledCircuit construction).function scalar selected.1.1)
     (pointBranchEvent visible.1.2 rows selected.1.1 online)
-    (243390420 / (2 : ENNReal) ^ 128)
+    (224668080 / (2 : ENNReal) ^ 128)
     (pointBranchEvent_mass_le visible.1.2 rows selected.1.1 online)
   exact bound
 
@@ -1795,13 +1824,13 @@ theorem idealPointBranchCollisionFlag_mass_le [Fintype Block]
       ((AffineInput × adversary.State) × SimulatorState × List (Sigma Garbling.oracleSpec.Answer)) →
       CircuitOnlineCoin → PMF (Fin FieldMacToECMac.outputMacCount → Coordinates.Rows)) :
     (idealPointBranchCollisionFlag adversary parameter scalar auxiliary construction reconstructRows).toOuterMeasure
-      {flag | flag = true} ≤ 243390420 / (2 : ENNReal) ^ 128 := by
+      {flag | flag = true} ≤ 224668080 / (2 : ENNReal) ^ 128 := by
   refine four_bind_event_le (PMF.uniformOfFintype VisibleSimulatorCoin)
     (idealPointBranchPrior adversary parameter auxiliary)
     (fun _ _ => PMF.uniformOfFintype CircuitOnlineCoin) reconstructRows
     (idealPointBranchFinish adversary scalar construction)
     (idealPointBranchCollisionFlag adversary parameter scalar auxiliary construction reconstructRows)
-    {flag | flag = true} (243390420 / (2 : ENNReal) ^ 128) rfl ?_
+    {flag | flag = true} (224668080 / (2 : ENNReal) ^ 128) rfl ?_
   exact idealPointBranchFinish_mass_le adversary scalar construction
 
 /-- This experiment adds only the actual encode collision flag to the public transcript. -/

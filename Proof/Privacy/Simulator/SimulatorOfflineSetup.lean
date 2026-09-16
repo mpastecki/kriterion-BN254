@@ -10,7 +10,7 @@ def ready (arrays : OfflineArrays) : PrivateCache × Pipeline.Table :=
   ((cacheWithCost arrays).1, (tableWithCost arrays).1)
 
 /-- This sampler retains the original private sample distribution. -/
-def offlineReady : Code (PrivateCache × Pipeline.Table) 907550 := offlineArrays.map ready
+def offlineReady : Code (PrivateCache × Pipeline.Table) 838208 := offlineArrays.map ready
 
 /-- Each gate record has four array getter fields. The charge covers their reads,
 getter closures, product temporaries, and output record writes. -/
@@ -20,7 +20,7 @@ def curveCoinWithCost (arrays : GateArrays 3 5) : CurvePublicSample × Nat :=
 /-- The row conversion builds three gate records and one row record. -/
 def rowCoinWithCost (arrays : RowArrays) : RowPublicSample × Nat :=
   let x := (xEquiv (gateArraysEquiv 5 4 arrays.1), 32)
-  let y := (yEquiv (gateArraysEquiv 4 4 arrays.2.1), 32)
+  let y := (yEquiv (gateArraysEquiv 4 3 arrays.2.1), 32)
   let z := (zEquiv (gateArraysEquiv 5 5 arrays.2.2), 32)
   (rowEquiv (x.1, y.1, z.1), x.2 + y.2 + z.2 + 4)
 
@@ -78,7 +78,7 @@ def readyWithCost (arrays : OfflineArrays) : (PrivateCache × Pipeline.Table) ×
 theorem readyWithCost_value (arrays : OfflineArrays) : (readyWithCost arrays).1 = ready arrays := by
   simp only [readyWithCost, cacheFromCoinWithCost_value, ready]
 
-theorem readyWithCost_count (arrays : OfflineArrays) : (readyWithCost arrays).2 = 84331 := by
+theorem readyWithCost_count (arrays : OfflineArrays) : (readyWithCost arrays).2 = 81055 := by
   simp only [readyWithCost, cacheFromCoinWithCost_value, coinWithCost_count,
     cacheWithCost_count, tableWithCost_count]
 

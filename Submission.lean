@@ -18,7 +18,7 @@ def solution : Kriterion.Solution := {
   EncodingKey := Garbling.EncodingKey
   State := Security.CircuitSimulatorState
   encoding := Wire.encoding
-  ciphertextBytes := 9699931
+  ciphertextBytes := 8956916
   evaluationOracle := fun tape => (tape.fixedKeyOracle, tape.encPRFOracle, tape.hashOracle)
   oracleUniform := by
     convert Security.oracleUniform (Seed.randomness 0) using 1
@@ -49,7 +49,7 @@ def solution : Kriterion.Solution := {
     refine ⟨Security.concreteCircuitSimulator.mapLabels pack restore,
       Security.concreteCircuitSimulator_rules.mapLabels pack restore, ?_⟩
     have privacy := (Security.concreteAdaptivePrivacy (Aux := Unit) (Seed.randomness 0)).mapLabels
-      pack Lamport.restore (fun _ => 9699931) restore (fun _ => rfl)
+      pack Lamport.restore (fun _ => 8956916) restore (fun _ => rfl)
     have instances : (@Fintype.ofFinite Garbling.Randomness inferInstance) =
         Security.garblingRandomnessFintype := Subsingleton.elim _ _
     have tapes : @uniformRandomTape Garbling.Randomness (@Fintype.ofFinite _ inferInstance)

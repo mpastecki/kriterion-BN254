@@ -22,7 +22,7 @@ theorem adaptiveErrorEnvelope_has100Bits :
   intro queries
   have countBound : adaptiveConstantCount + adaptiveQueryCount * queries ≤
       permutationWork queries * 2 ^ 28 := by
-    change 246408450 + 824 * queries ≤ max queries 1 * 268435456
+    change 227454970 + 824 * queries ≤ max queries 1 * 268435456
     omega
   change (((adaptiveConstantCount + adaptiveQueryCount * queries : Nat) : ℝ) /
       (2 : ℝ) ^ 128) * (2 : ℝ) ^ 100 ≤ ((permutationWork queries : Nat) : ℝ)
@@ -64,8 +64,8 @@ theorem fieldMaskLoss_le_block :
 
 /-- Whole-circuit hash rounding fits one inverse block count per gate. -/
 theorem circuitHashRounding_le_blocks :
-    (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 ≤
-      301752 / (2 : ℝ) ^ 128 := by
+    (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 ≤
+      278638 / (2 : ℝ) ^ 128 := by
   norm_num [baseFieldModulus]
 
 /-- Every Boolean decision advantage is at most one. -/
@@ -106,9 +106,9 @@ theorem smallBudget_slots_fit [Fintype Block] (queries : Nat) (small : queries <
 
 /-- The checked collision, query, linking, and source losses fit the adaptive envelope. -/
 theorem adaptiveLossSum_le_envelope (before queries : Nat) (beforeLe : before ≤ queries) :
-    (243390420 : ℝ) / 2 ^ 128 + 182 * before / 2 ^ 128 + 182 * queries / 2 ^ 128 +
+    (224668080 : ℝ) / 2 ^ 128 + 182 * before / 2 ^ 128 + 182 * queries / 2 ^ 128 +
       queries / (baseFieldModulus : ℝ) + (508 + 4 * queries) / 2 ^ 128 + 1 / baseFieldModulus +
-      2 * (301752 * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384) + (2 : ℝ) ^ (-240 : ℤ) ≤
+      2 * (278638 * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384) + (2 : ℝ) ^ (-240 : ℤ) ≤
         adaptiveErrorEnvelope queries := by
   have hidden : (queries : ℝ) / baseFieldModulus ≤ queries / (2 : ℝ) ^ 128 := by
     simpa only [div_eq_mul_inv, one_mul] using
@@ -116,11 +116,11 @@ theorem adaptiveLossSum_le_envelope (before queries : Nat) (beforeLe : before �
   have offset : (2 : ℝ) ^ (-240 : ℤ) ≤ 1 / (2 : ℝ) ^ 128 := by norm_num
   have prefixBound : (before : ℝ) ≤ queries := by exact_mod_cast beforeLe
   calc
-    _ ≤ (243390420 : ℝ) / 2 ^ 128 + 182 * before / 2 ^ 128 + 182 * queries / 2 ^ 128 +
-        queries / (2 : ℝ) ^ 128 + (508 + 4 * queries) / 2 ^ 128 + 1 / 2 ^ 128 + 2 * (301752 / 2 ^ 128) +
+    _ ≤ (224668080 : ℝ) / 2 ^ 128 + 182 * before / 2 ^ 128 + 182 * queries / 2 ^ 128 +
+        queries / (2 : ℝ) ^ 128 + (508 + 4 * queries) / 2 ^ 128 + 1 / 2 ^ 128 + 2 * (278638 / 2 ^ 128) +
         1 / 2 ^ 128 := by linarith [circuitHashRounding_le_blocks, fieldMaskLoss_le_block]
     _ ≤ adaptiveErrorEnvelope queries := by
-      change _ ≤ ((246408450 + 824 * queries : Nat) : ℝ) / (2 : ℝ) ^ 128
+      change _ ≤ ((227454970 + 824 * queries : Nat) : ℝ) / (2 : ℝ) ^ 128
       push_cast
       norm_num
       linarith [Nat.cast_nonneg (α := ℝ) queries]

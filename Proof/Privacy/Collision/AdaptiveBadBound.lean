@@ -193,13 +193,13 @@ theorem reconstructedCircuitSource_eq_split (bridgeKey mask : BaseField)
     (input : AffineInput) (sample : PublicSample) :
     reconstructedCircuitSource sample mask (fun row => rows.get row) input
       (bridgeKey + mask * (input.x ^ 3 + 3 - input.y ^ 2))
-      (fun row => (FieldMacToECMac.evaluateRows rows input).get row) =
+      (fun row => (FieldMacToECMac.representedRows rows input).get row) =
         (circuitMaskSampleSplit bridgeKey mask rows input sample).2 := by
   have law := congrArg (fun selected => circuitMaskSourceFromSelected selected mask
     (fun row => rows.get row) input) (circuitMaskSampleGarble_split bridgeKey mask rows sparse input sample)
   rw [circuitMaskSourceFromSelected_garble] at law
-  have targets : Vector.ofFn (fun row => (FieldMacToECMac.evaluateRows rows input).get row) =
-      FieldMacToECMac.evaluateRows rows input := vector_ofFn_get _
+  have targets : Vector.ofFn (fun row => (FieldMacToECMac.representedRows rows input).get row) =
+      FieldMacToECMac.representedRows rows input := vector_ofFn_get _
   unfold reconstructedCircuitSource
   rw [targets]
   exact law.symm
@@ -217,14 +217,14 @@ private theorem xBranchSlope_source (sample : XPublicSample) (coefficients : Fin
   all_goals simp [XPublicSample.retargetMask]
 
 private theorem yBranchSlope_source (sample : YPublicSample) (coefficients : Fin 3 → BaseField)
-    (input : AffineInput) (target : BaseField) (gate : Fin 4) :
+    (input : AffineInput) (target : BaseField) (gate : Fin 3) :
     sample.branchSlope coefficients input gate =
       let source := (yMaskSelectedEquiv coefficients input).symm
         ((fun index => sample.coefficients index.succ), (sample.retargetMask input target).targets)
-      ![-source.1 2, -DigitAdaptor.fromBits (source.2 0), -source.1 1,
-        -(source.1 0 + DigitAdaptor.fromBits (source.2 2))] gate := by
+      ![-source.1 2, -(source.1 1 + DigitAdaptor.fromBits (source.2 0)),
+        -(source.1 0 + DigitAdaptor.fromBits (source.2 1))] gate := by
   fin_cases gate <;>
-    dsimp only [yMaskSelectedEquiv, Equiv.coe_fn_symm_mk, Equiv.symm, Equiv.coe_fn_mk, YPublicSample.branchSlope, maskShiftEquiv]
+    dsimp only [yMaskSelectedEquiv, CubicMasks.selectedEquiv, CubicMasks.coefficients, cubicYParameters, Equiv.coe_fn_symm_mk, Equiv.symm, Equiv.coe_fn_mk, YPublicSample.branchSlope, maskShiftEquiv]
   all_goals simp [YPublicSample.retargetMask]
 
 private theorem zBranchSlope_source (sample : ZPublicSample) (coefficients : Fin 4 → BaseField)
@@ -398,7 +398,6 @@ theorem reconstructedCircuitSource_bucketOffset_injective (sample : PublicSample
       · exact reconstructedCircuitSource_pointOffset_injective sample mask rows input curveTarget targets good (.inr (.inl 0)) bit slot
       · exact reconstructedCircuitSource_pointOffset_injective sample mask rows input curveTarget targets good (.inr (.inl 1)) bit slot
       · exact reconstructedCircuitSource_pointOffset_injective sample mask rows input curveTarget targets good (.inr (.inl 2)) bit slot
-      · exact reconstructedCircuitSource_pointOffset_injective sample mask rows input curveTarget targets good (.inr (.inl 3)) bit slot
       · exact reconstructedCircuitSource_pointOffset_injective sample mask rows input curveTarget targets good (.inr (.inr 0)) bit slot
       · exact reconstructedCircuitSource_pointOffset_injective sample mask rows input curveTarget targets good (.inr (.inr 1)) bit slot
       · exact reconstructedCircuitSource_pointOffset_injective sample mask rows input curveTarget targets good (.inr (.inr 2)) bit slot

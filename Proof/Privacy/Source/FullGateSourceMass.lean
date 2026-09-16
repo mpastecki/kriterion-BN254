@@ -110,9 +110,9 @@ theorem fullGatePrefixBad_mass_le [FieldCertificate] [GroupCertificate] {Aux : T
     ((fullGatePrefixSamples scalar witness parameter
       (fun table rest => gateSourceChoose adversary parameter auxiliary table rest.2)).toOuterMeasure
         {sample | fullGatePrefixBad sample}).toReal ≤
-      243390420 / (2 : ℝ) ^ 128 +
+      224668080 / (2 : ℝ) ^ 128 +
         (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ℝ) ^ 128 +
-        (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 := by
+        (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 := by
   have law := congrArg (fun distribution : PMF Bool =>
     (distribution.toOuterMeasure {flag | flag = true}).toReal)
     (fullGatePrefixBad_map adversary parameter auxiliary scalar witness)
@@ -135,9 +135,9 @@ theorem fullGatePrefixGood_missing_le [FieldCertificate] [GroupCertificate] {Aux
     (∑' transcript : Observation,
       ((fullAdaptiveGateSource scalar witness parameter choose observe fallback) transcript -
         sourceGoodMass samples kernel {sample | fullGatePrefixBad sample} transcript)).toReal ≤
-      243390420 / (2 : ℝ) ^ 128 +
+      224668080 / (2 : ℝ) ^ 128 +
         (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ℝ) ^ 128 +
-        (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 := by
+        (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 := by
   dsimp only
   rw [← fullGatePrefixSamples_bind, sourceGoodMass_missing]
   exact fullGatePrefixBad_mass_le adversary parameter auxiliary scalar witness

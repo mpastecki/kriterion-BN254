@@ -129,9 +129,9 @@ theorem pipelineGateSchedule_query_counts (curve : CurveGateRequest)
     (points : PointGateRequests) (input : BN254.AffineInput)
     (curveInputMac pointInputMac : InputMac) :
     let schedule := pipelineGateSchedule curve points input curveInputMac pointInputMac
-    5 * schedule.length = 1508760 ∧
-      603504 ≤ gateScheduleActiveSlotCount schedule ∧
-      gateScheduleActiveSlotCount schedule ≤ 905256 := by
+    5 * schedule.length = 1393190 ∧
+      557276 ≤ gateScheduleActiveSlotCount schedule ∧
+      gateScheduleActiveSlotCount schedule ≤ 835914 := by
   dsimp only
   have bounds := gateScheduleActiveSlotCount_bounds
     (pipelineGateSchedule curve points input curveInputMac pointInputMac)

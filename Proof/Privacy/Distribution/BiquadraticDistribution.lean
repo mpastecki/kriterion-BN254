@@ -1,4 +1,4 @@
-import Proof.Privacy.Distribution.AlgebraicDistribution
+import Proof.Privacy.Distribution.CubicDistribution
 
 namespace Kriterion.ArgoMAC.Security
 
@@ -42,25 +42,6 @@ theorem garbleX_maskCoefficients (c0 : BaseField) (coefficients : Fin 4 → Base
   fin_cases index <;>
     simp [Biquadratic.garbleX, xMaskPublicCoefficients, xMaskSource,
       DigitAdaptor.bitsK, DigitAdaptor.garble, BitAdaptor.garble] <;> rfl
-
-/-- The bit-adaptor offsets are exactly its false-branch hash values. -/
-theorem digitGarble_bitsK_eq {count : Nat} (windows : Nat → BitAdaptor.FixedKeyOracle)
-    (slope : BaseField) (keys : Vector BitAdaptor.Key count) :
-    DigitAdaptor.bitsK (DigitAdaptor.garble windows slope keys).2 =
-      DigitAdaptor.fromBits (fun index =>
-        (windows index.val).hashToField (keys.get index).falseLabel) := by
-  simp [DigitAdaptor.bitsK, DigitAdaptor.garble, BitAdaptor.garble]
-
-/-- The selected outputs apply the shared mask shift to those hash offsets. -/
-theorem digitGarble_selectedOutputs_eq (windows : Nat → BitAdaptor.FixedKeyOracle)
-    (slope input : BaseField) (keys : CoordinateMacKey) :
-    (fun index => (DigitAdaptor.selectedOutputs
-      (DigitAdaptor.garble windows slope keys).2 (coordinateValues input)).get index) =
-      maskShiftEquiv slope input (fun index =>
-        (windows index.val).hashToField (keys.get index).falseLabel) := by
-  funext index
-  simp [DigitAdaptor.selectedOutputs, DigitAdaptor.garble, BitAdaptor.garble,
-    BitAdaptor.OutputKey.encode, maskShiftEquiv]
 
 /-- The triangular mask map recovers every source value from selected targets. -/
 def xMaskSelectedEquiv (coefficients : Fin 4 → BaseField) (input : AffineInput) :
@@ -115,24 +96,6 @@ theorem BiquadraticXRequest.result_eq_xMaskResult (request : BiquadraticXRequest
     request.result input = xMaskResult input request.maskView := by
   simp [BiquadraticXRequest.result, BiquadraticXRequest.maskView, xMaskResult, xMaskRest]
   ring
-
-/-- The output fixes the constant coefficient once all other values are known. -/
-def maskViewFiberEquiv {count : Nat} {Masks : Type*}
-    (rest : (Fin count → BaseField) × Masks → BaseField) (target : BaseField) :
-    ((Fin count → BaseField) × Masks) ≃
-      {view : (Fin (count + 1) → BaseField) × Masks //
-        view.1 0 + rest ((fun index => view.1 index.succ), view.2) = target} where
-  toFun data := ⟨(Fin.cases (target - rest data) data.1, data.2), by simp⟩
-  invFun view := ((fun index => view.1.1 index.succ), view.1.2)
-  left_inv _ := rfl
-  right_inv view := by
-    apply Subtype.ext
-    apply Prod.ext
-    · funext index
-      refine Fin.cases ?_ (fun _ => rfl) index
-      change target - rest ((fun index => view.1.1 index.succ), view.1.2) = view.1.1 0
-      exact sub_eq_iff_eq_add.mpr view.2.symm
-    · rfl
 
 /-- This specialization fixes the X-coordinate polynomial result. -/
 def xMaskFiberEquiv (input : AffineInput) (target : BaseField) :
@@ -208,91 +171,6 @@ theorem map_uniform_xMaskGarbleEquiv (c0 : BaseField) (coefficients : Fin 4 → 
       xMaskResult input view = xMaskPolynomial c0 coefficients input} :=
     ⟨xMaskGarbleEquiv c0 coefficients input (0, 0)⟩
   exact map_uniformOfFintype_equivBetween (xMaskGarbleEquiv c0 coefficients input)
-
-/-- An additive pivot separates the result from a fixed result fiber. -/
-def resultFiberSplitEquiv {View : Type*} (result : View → BaseField)
-    (shift : BaseField → View → View)
-    (shiftZero : ∀ view, shift 0 view = view)
-    (shiftAdd : ∀ first second view, shift first (shift second view) = shift (first + second) view)
-    (resultShift : ∀ amount view, result (shift amount view) = result view + amount)
-    (target : BaseField) : View ≃ BaseField × {view // result view = target} where
-  toFun view := (result view, ⟨shift (target - result view) view, by rw [resultShift]; ring⟩)
-  invFun pair := shift (pair.1 - target) pair.2.1
-  left_inv view := by
-    change shift (result view - target) (shift (target - result view) view) = view
-    rw [shiftAdd]
-    have cancel : result view - target + (target - result view) = 0 := by ring
-    rw [cancel, shiftZero]
-  right_inv pair := by
-    apply Prod.ext
-    · change result (shift (pair.1 - target) pair.2.1) = pair.1
-      rw [resultShift, pair.2.2]
-      ring
-    · apply Subtype.ext
-      change shift (target - result (shift (pair.1 - target) pair.2.1))
-        (shift (pair.1 - target) pair.2.1) = pair.2.1
-      rw [resultShift, pair.2.2, shiftAdd]
-      have cancel : target - (target + (pair.1 - target)) + (pair.1 - target) = 0 := by ring
-      rw [cancel, shiftZero]
-
-/-- Retargeting an additive pivot gives the uniform distribution on its result fiber. -/
-theorem map_uniform_retargetOfShift {View : Type*} [Fintype View] [Nonempty View]
-    (result : View → BaseField) (shift : BaseField → View → View)
-    (shiftZero : ∀ view, shift 0 view = view)
-    (shiftAdd : ∀ first second view, shift first (shift second view) = shift (first + second) view)
-    (resultShift : ∀ amount view, result (shift amount view) = result view + amount)
-    (target : BaseField) :
-    letI : Nonempty {view // result view = target} :=
-      ⟨(resultFiberSplitEquiv result shift shiftZero shiftAdd resultShift target
-        (Classical.arbitrary View)).2⟩
-    (PMF.uniformOfFintype View).map (fun view => shift (target - result view) view) =
-      (PMF.uniformOfFintype {view // result view = target}).map Subtype.val := by
-  classical
-  let e := resultFiberSplitEquiv result shift shiftZero shiftAdd resultShift target
-  letI : Nonempty {view // result view = target} := ⟨(e (Classical.arbitrary View)).2⟩
-  calc
-    _ = ((PMF.uniformOfFintype View).map e).map (Subtype.val ∘ Prod.snd) := by
-      rw [PMF.map_comp]
-      rfl
-    _ = (PMF.uniformOfFintype (BaseField × {view // result view = target})).map
-        (Subtype.val ∘ Prod.snd) := by
-      rw [map_uniformOfFintype_equivBetween e]
-    _ = _ := by rw [← PMF.map_comp, map_uniform_prod_snd]
-
-/-- This shift adds to the low mask and keeps all other masks. -/
-def lowMaskShift {count : Nat} (amount : BaseField)
-    (values : Fin (count + 1) → BaseField) : Fin (count + 1) → BaseField :=
-  Fin.cases (values 0 + amount) (fun index => values index.succ)
-
-@[simp] theorem lowMaskShift_zero {count : Nat} (values : Fin (count + 1) → BaseField) :
-    lowMaskShift 0 values = values := by
-  funext index
-  refine Fin.cases ?_ (fun _ => rfl) index
-  simp [lowMaskShift]
-
-theorem lowMaskShift_add {count : Nat} (first second : BaseField)
-    (values : Fin (count + 1) → BaseField) :
-    lowMaskShift first (lowMaskShift second values) = lowMaskShift (first + second) values := by
-  funext index
-  refine Fin.cases ?_ (fun _ => rfl) index
-  simp only [lowMaskShift, Fin.cases_zero]
-  ring
-
-/-- The low-mask shift adds the same amount to the field total. -/
-theorem fromBits_lowMaskShift {count : Nat} (amount : BaseField)
-    (values : Fin (count + 1) → BaseField) :
-    DigitAdaptor.fromBits (lowMaskShift amount values) = DigitAdaptor.fromBits values + amount := by
-  simp only [DigitAdaptor.fromBits, Fin.foldr_succ, lowMaskShift, Fin.cases_zero, Fin.cases_succ]
-  ring
-
-/-- The low-mask shift is the simulator's retarget operation. -/
-theorem lowMaskShift_eq_retargetBits {count : Nat} (amount : BaseField)
-    (values : Fin (count + 1) → BaseField) :
-    lowMaskShift amount values = retargetBits values (DigitAdaptor.fromBits values + amount) := by
-  funext index
-  refine Fin.cases ?_ (fun _ => rfl) index
-  simp only [lowMaskShift, retargetBits, Fin.cases_zero, DigitAdaptor.fromBits, Fin.foldr_succ]
-  ring
 
 /-- The X pivot changes only the low x9 target. -/
 def xMaskPivotShift (amount : BaseField) (view : XMaskView) : XMaskView :=
@@ -374,24 +252,23 @@ theorem xMaskGarble_eq_retargetDistribution (c0 : BaseField)
   rw [map_uniform_xMaskRetarget, ← map_uniform_xMaskGarbleEquiv, PMF.map_comp]
   rfl
 
-abbrev YMaskData := (Fin 3 → BaseField) × (Fin 4 → Fin coordinateBitCount → BaseField)
-abbrev YMaskView := (Fin 4 → BaseField) × (Fin 4 → Fin coordinateBitCount → BaseField)
+abbrev YMaskData := CubicMasks.Source
+abbrev YMaskView := CubicMasks.View
 
-/-- These values are the Y randomizers and actual false-branch hash offsets. -/
+def cubicYParameters (c0 : BaseField) (coefficients : Fin 3 → BaseField) : Cubic.Coefficients :=
+  ⟨c0 + 3 * coefficients 2, coefficients 0, coefficients 1, coefficients 2⟩
+
 def yMaskSource (randomness : Biquadratic.YRandomness)
     (oracles : Biquadratic.Oracles) (key : InputMacKey) : YMaskData :=
   (![randomness.r1, randomness.r4, randomness.r5],
-    ![(fun index => (oracles.y8 index.val).hashToField (key.y.get index).falseLabel),
-      (fun index => (oracles.y10 index.val).hashToField (key.y.get index).falseLabel),
+    ![(fun index => (oracles.y8 index.val).hashToField (key.x.get index).falseLabel),
       (fun index => (oracles.x7 index.val).hashToField (key.x.get index).falseLabel),
       (fun index => (oracles.x9 index.val).hashToField (key.x.get index).falseLabel)])
 
 def yMaskPublicCoefficients (c0 : BaseField) (coefficients : Fin 3 → BaseField)
     (source : YMaskData) : Fin 4 → BaseField :=
-  Fin.cases (c0 - DigitAdaptor.fromBits (source.2 1) - DigitAdaptor.fromBits (source.2 3))
-    (fun index => coefficients index + source.1 index)
+  CubicMasks.publicCoefficients (cubicYParameters c0 coefficients) source
 
-/-- The concrete Y garbler publishes the coefficients in this mask map. -/
 theorem garbleY_maskCoefficients (c0 : BaseField) (coefficients : Fin 3 → BaseField)
     (randomness : Biquadratic.YRandomness) (oracles : Biquadratic.Oracles) (key : InputMacKey) :
     let table := Biquadratic.garbleY c0 (coefficients 0) (coefficients 1)
@@ -400,88 +277,46 @@ theorem garbleY_maskCoefficients (c0 : BaseField) (coefficients : Fin 3 → Base
       yMaskPublicCoefficients c0 coefficients (yMaskSource randomness oracles key) := by
   funext index
   fin_cases index <;> simp [Biquadratic.garbleY, yMaskPublicCoefficients, yMaskSource,
+    cubicYParameters, CubicMasks.publicCoefficients, CubicMasks.coefficients,
     DigitAdaptor.bitsK, DigitAdaptor.garble, BitAdaptor.garble] <;> rfl
 
-/-- The inverse recovers y8 and x7 before it recovers y10 and x9. -/
 def yMaskSelectedEquiv (coefficients : Fin 3 → BaseField) (input : AffineInput) :
-    YMaskData ≃ YMaskData where
-  toFun source := ((fun index => coefficients index + source.1 index),
-    ![maskShiftEquiv (-source.1 2) input.y (source.2 0),
-      maskShiftEquiv (-DigitAdaptor.fromBits (source.2 0)) input.y (source.2 1),
-      maskShiftEquiv (-source.1 1) input.x (source.2 2),
-      maskShiftEquiv (-(source.1 0 + DigitAdaptor.fromBits (source.2 2))) input.x (source.2 3)])
-  invFun selected :=
-    let r := fun index => selected.1 index - coefficients index
-    let y8 := (maskShiftEquiv (-r 2) input.y).symm (selected.2 0)
-    let x7 := (maskShiftEquiv (-r 1) input.x).symm (selected.2 2)
-    (r, ![y8, (maskShiftEquiv (-DigitAdaptor.fromBits y8) input.y).symm (selected.2 1), x7,
-      (maskShiftEquiv (-(r 0 + DigitAdaptor.fromBits x7)) input.x).symm (selected.2 3)])
-  left_inv source := by
-    apply Prod.ext
-    · funext index; simp
-    · funext index; fin_cases index <;> simp
-  right_inv selected := by
-    apply Prod.ext
-    · funext index; simp
-    · funext index; fin_cases index <;> simp
+    YMaskData ≃ YMaskData := CubicMasks.selectedEquiv (cubicYParameters 0 coefficients) input.x
 
-def yMaskRest (input : AffineInput) (data : YMaskData) : BaseField :=
-  data.1 0 * input.x + data.1 1 * input.x ^ 2 + data.1 2 * input.y ^ 2 +
-    DigitAdaptor.fromBits (data.2 2) * input.x + DigitAdaptor.fromBits (data.2 0) * input.y +
-    DigitAdaptor.fromBits (data.2 3) + DigitAdaptor.fromBits (data.2 1)
+def yMaskRest (input : AffineInput) (data : YMaskData) : BaseField := CubicMasks.rest input.x data
 
-def yMaskResult (input : AffineInput) (view : YMaskView) : BaseField :=
-  view.1 0 + yMaskRest input ((fun index => view.1 index.succ), view.2)
+def yMaskResult (input : AffineInput) (view : YMaskView) : BaseField := CubicMasks.result input.x view
 
 def yMaskPolynomial (c0 : BaseField) (coefficients : Fin 3 → BaseField)
-    (input : AffineInput) : BaseField :=
-  c0 + coefficients 0 * input.x + coefficients 1 * input.x ^ 2 + coefficients 2 * input.y ^ 2
+    (input : AffineInput) : BaseField := Cubic.polynomial (cubicYParameters c0 coefficients) input.x
 
 def BiquadraticYRequest.maskView (request : BiquadraticYRequest) : YMaskView :=
   (![request.c0, request.c1, request.c4, request.c5],
-    ![request.y8Targets, request.y10Targets, request.x7Targets, request.x9Targets])
+    ![request.y8Targets, request.x7Targets, request.x9Targets])
 
 theorem BiquadraticYRequest.result_eq_yMaskResult (request : BiquadraticYRequest)
     (input : AffineInput) : request.result input = yMaskResult input request.maskView := by
-  simp [BiquadraticYRequest.result, BiquadraticYRequest.maskView, yMaskResult, yMaskRest]
+  simp [BiquadraticYRequest.result, BiquadraticYRequest.maskView, yMaskResult,
+    CubicMasks.result, CubicMasks.rest]
   ring
 
-/-- This equivalence gives the complete Y mask change of variables. -/
 def yMaskGarbleEquiv (c0 : BaseField) (coefficients : Fin 3 → BaseField) (input : AffineInput) :
     YMaskData ≃ {view : YMaskView // yMaskResult input view = yMaskPolynomial c0 coefficients input} :=
-  (yMaskSelectedEquiv coefficients input).trans
-    (maskViewFiberEquiv (yMaskRest input) (yMaskPolynomial c0 coefficients input))
+  CubicMasks.garbleEquiv (cubicYParameters c0 coefficients) input.x
 
 theorem yMaskGarbleEquiv_coefficients (c0 : BaseField) (coefficients : Fin 3 → BaseField)
     (input : AffineInput) (source : YMaskData) :
     (yMaskGarbleEquiv c0 coefficients input source).1.1 =
-      yMaskPublicCoefficients c0 coefficients source := by
-  funext index
-  refine Fin.cases ?_ (fun _ => rfl) index
-  change yMaskPolynomial c0 coefficients input -
-    ((coefficients 0 + source.1 0) * input.x + (coefficients 1 + source.1 1) * input.x ^ 2 +
-      (coefficients 2 + source.1 2) * input.y ^ 2 +
-      DigitAdaptor.fromBits (maskShiftEquiv (-source.1 1) input.x (source.2 2)) * input.x +
-      DigitAdaptor.fromBits (maskShiftEquiv (-source.1 2) input.y (source.2 0)) * input.y +
-      DigitAdaptor.fromBits (maskShiftEquiv (-(source.1 0 + DigitAdaptor.fromBits (source.2 2)))
-        input.x (source.2 3)) +
-      DigitAdaptor.fromBits (maskShiftEquiv (-DigitAdaptor.fromBits (source.2 0)) input.y
-        (source.2 1))) =
-    c0 - DigitAdaptor.fromBits (source.2 1) - DigitAdaptor.fromBits (source.2 3)
-  rw [fromBits_maskShift, fromBits_maskShift, fromBits_maskShift, fromBits_maskShift]
-  unfold yMaskPolynomial
-  ring
+      yMaskPublicCoefficients c0 coefficients source :=
+  CubicMasks.garbleEquiv_coefficients _ _ _
 
 theorem garbleY_maskTargets (c0 : BaseField) (coefficients : Fin 3 → BaseField)
     (randomness : Biquadratic.YRandomness) (oracles : Biquadratic.Oracles)
     (key : InputMacKey) (input : AffineInput) :
-    let y8 := DigitAdaptor.garble oracles.y8 (-randomness.r5) key.y
-    let y10 := DigitAdaptor.garble oracles.y10 (-DigitAdaptor.bitsK y8.2) key.y
-    let x7 := DigitAdaptor.garble oracles.x7 (-randomness.r4) key.x
-    let x9 := DigitAdaptor.garble oracles.x9
-      (-(randomness.r1 + DigitAdaptor.bitsK x7.2)) key.x
-    ![(fun index => (DigitAdaptor.selectedOutputs y8.2 (coordinateValues input.y)).get index),
-      (fun index => (DigitAdaptor.selectedOutputs y10.2 (coordinateValues input.y)).get index),
+    let y8 := DigitAdaptor.garble oracles.y8 (-randomness.r5) key.x
+    let x7 := DigitAdaptor.garble oracles.x7 (-(randomness.r4 + DigitAdaptor.bitsK y8.2)) key.x
+    let x9 := DigitAdaptor.garble oracles.x9 (-(randomness.r1 + DigitAdaptor.bitsK x7.2)) key.x
+    ![(fun index => (DigitAdaptor.selectedOutputs y8.2 (coordinateValues input.x)).get index),
       (fun index => (DigitAdaptor.selectedOutputs x7.2 (coordinateValues input.x)).get index),
       (fun index => (DigitAdaptor.selectedOutputs x9.2 (coordinateValues input.x)).get index)] =
       (yMaskGarbleEquiv c0 coefficients input (yMaskSource randomness oracles key)).1.2 := by
@@ -489,31 +324,18 @@ theorem garbleY_maskTargets (c0 : BaseField) (coefficients : Fin 3 → BaseField
   simp only [digitGarble_selectedOutputs_eq, digitGarble_bitsK_eq]
   rfl
 
-def yMaskPivotShift (amount : BaseField) (view : YMaskView) : YMaskView :=
-  (view.1, Function.update view.2 3 (lowMaskShift amount (view.2 3)))
+def yMaskPivotShift (amount : BaseField) (view : YMaskView) : YMaskView := CubicMasks.pivotShift amount view
 
-@[simp] theorem yMaskPivotShift_zero (view : YMaskView) : yMaskPivotShift 0 view = view := by
-  simp [yMaskPivotShift]
+@[simp] theorem yMaskPivotShift_zero (view : YMaskView) : yMaskPivotShift 0 view = view :=
+  CubicMasks.pivotShift_zero view
 
 theorem yMaskPivotShift_add (first second : BaseField) (view : YMaskView) :
-    yMaskPivotShift first (yMaskPivotShift second view) = yMaskPivotShift (first + second) view := by
-  apply Prod.ext
-  · rfl
-  · funext index
-    by_cases pivot : index = 3
-    · subst index; simp [yMaskPivotShift, lowMaskShift_add]
-    · simp [yMaskPivotShift, pivot]
+    yMaskPivotShift first (yMaskPivotShift second view) = yMaskPivotShift (first + second) view :=
+  CubicMasks.pivotShift_add first second view
 
 theorem yMaskResult_pivotShift (input : AffineInput) (amount : BaseField) (view : YMaskView) :
-    yMaskResult input (yMaskPivotShift amount view) = yMaskResult input view + amount := by
-  change view.1 0 + (view.1 1 * input.x + view.1 2 * input.x ^ 2 + view.1 3 * input.y ^ 2 +
-    DigitAdaptor.fromBits (view.2 2) * input.x + DigitAdaptor.fromBits (view.2 0) * input.y +
-    DigitAdaptor.fromBits (lowMaskShift amount (view.2 3)) + DigitAdaptor.fromBits (view.2 1)) =
-    view.1 0 + (view.1 1 * input.x + view.1 2 * input.x ^ 2 + view.1 3 * input.y ^ 2 +
-    DigitAdaptor.fromBits (view.2 2) * input.x + DigitAdaptor.fromBits (view.2 0) * input.y +
-    DigitAdaptor.fromBits (view.2 3) + DigitAdaptor.fromBits (view.2 1)) + amount
-  rw [fromBits_lowMaskShift]
-  ring
+    yMaskResult input (yMaskPivotShift amount view) = yMaskResult input view + amount :=
+  CubicMasks.result_pivotShift input.x amount view
 
 theorem BiquadraticYRequest.retarget_maskView (request : BiquadraticYRequest)
     (input : AffineInput) (target : BaseField) :
@@ -525,7 +347,6 @@ theorem BiquadraticYRequest.retarget_maskView (request : BiquadraticYRequest)
     fin_cases index
     · rfl
     · rfl
-    · rfl
     · change retargetBits request.x9Targets
         (target - request.result input + DigitAdaptor.fromBits request.x9Targets) =
           lowMaskShift (target - yMaskResult input request.maskView) request.x9Targets
@@ -533,20 +354,13 @@ theorem BiquadraticYRequest.retarget_maskView (request : BiquadraticYRequest)
       apply congrArg (retargetBits request.x9Targets)
       ring
 
-/-- Real Y masks and the corrected simulator give the same complete polynomial view. -/
 theorem yMaskGarble_eq_retargetDistribution (c0 : BaseField)
     (coefficients : Fin 3 → BaseField) (input : AffineInput) :
     (PMF.uniformOfFintype YMaskData).map
       (fun source => (yMaskGarbleEquiv c0 coefficients input source).1) =
     (PMF.uniformOfFintype YMaskView).map (fun view =>
-      yMaskPivotShift (yMaskPolynomial c0 coefficients input - yMaskResult input view) view) := by
-  let e := yMaskGarbleEquiv c0 coefficients input
-  letI : Nonempty {view : YMaskView //
-      yMaskResult input view = yMaskPolynomial c0 coefficients input} := ⟨e (0, 0)⟩
-  rw [map_uniform_retargetOfShift (yMaskResult input) yMaskPivotShift
-    yMaskPivotShift_zero yMaskPivotShift_add (yMaskResult_pivotShift input),
-    ← map_uniformOfFintype_equivBetween e, PMF.map_comp]
-  rfl
+      yMaskPivotShift (yMaskPolynomial c0 coefficients input - yMaskResult input view) view) :=
+  CubicMasks.garble_eq_retargetDistribution _ _
 
 abbrev ZMaskData := (Fin 4 → BaseField) × (Fin 5 → Fin coordinateBitCount → BaseField)
 abbrev ZMaskView := (Fin 5 → BaseField) × (Fin 5 → Fin coordinateBitCount → BaseField)
@@ -766,7 +580,7 @@ def xSampleViewEquiv : XPublicSample ≃ XMaskView × BiquadraticSampleRemainder
   left_inv sample := by cases sample; rfl
   right_inv _ := rfl
 
-def ySampleViewEquiv : YPublicSample ≃ YMaskView × BiquadraticSampleRemainder 4 where
+def ySampleViewEquiv : YPublicSample ≃ YMaskView × BiquadraticSampleRemainder 3 where
   toFun sample := ((sample.coefficients, sample.targets), (sample.tables, sample.quotients))
   invFun pair := {
     coefficients := pair.1.1
@@ -793,7 +607,7 @@ theorem map_uniform_xSampleViewEquiv :
 
 theorem map_uniform_ySampleViewEquiv :
     (PMF.uniformOfFintype YPublicSample).map ySampleViewEquiv =
-      PMF.uniformOfFintype (YMaskView × BiquadraticSampleRemainder 4) :=
+      PMF.uniformOfFintype (YMaskView × BiquadraticSampleRemainder 3) :=
   map_uniformOfFintype_equivBetween ySampleViewEquiv
 
 theorem map_uniform_zSampleViewEquiv :

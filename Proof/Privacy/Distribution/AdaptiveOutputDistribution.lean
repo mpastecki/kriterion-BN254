@@ -213,7 +213,7 @@ private theorem retarget_actualSelectedOutput [FieldCertificate] [GroupCertifica
     (input : AffineInput) (sample : PublicSample) :
     (decodePoint input).map (fun _ => sample.retargetMask input
       (randomness.bridgeKey + randomness.curveMask.value * (input.x ^ 3 + 3 - input.y ^ 2))
-      (evaluateRows (rowsForOutputKeys (outputKeys construction scalar randomness.offsets)
+      (representedRows (rowsForOutputKeys (outputKeys construction scalar randomness.offsets)
         randomness.pointRandomness) input)) =
     retargetOutput sample input (actualSelectedOutput scalar input randomness)
       (actualOutputRest randomness) := by
@@ -222,6 +222,8 @@ private theorem retarget_actualSelectedOutput [FieldCertificate] [GroupCertifica
   | none => rfl
   | some point =>
       simp only [Option.map_some, validCurveTarget input point decoded]
+      rw [representedRows_onCurve _ input (rowsForOutputKeysSparse _ _)
+        ((decodePoint_defined input).mp (by rw [decoded]; simp))]
       rfl
 
 /-- This hybrid uses the exact actual rows before the selected input is known. -/

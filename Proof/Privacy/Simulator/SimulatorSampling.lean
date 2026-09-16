@@ -250,7 +250,7 @@ def xEquiv : GateData 5 4 ≃ XPublicSample where
   left_inv _ := rfl
   right_inv _ := rfl
 
-def yEquiv : GateData 4 4 ≃ YPublicSample where
+def yEquiv : GateData 4 3 ≃ YPublicSample where
   toFun x := ⟨x.1, x.2.1, x.2.2.1, x.2.2.2⟩
   invFun x := (x.coefficients, x.tables, x.quotients, x.targets)
   left_inv _ := rfl
@@ -268,13 +268,13 @@ def rowEquiv : XPublicSample × (YPublicSample × ZPublicSample) ≃ RowPublicSa
   left_inv _ := rfl
   right_inv _ := rfl
 
-def row : Code RowPublicSample 9920 :=
+def row : Code RowPublicSample 9158 :=
   (((gateData 5 4).map xEquiv).pair
-    (((gateData 4 4).map yEquiv).pair ((gateData 5 5).map zEquiv))).map rowEquiv
+    (((gateData 4 3).map yEquiv).pair ((gateData 5 5).map zEquiv))).map rowEquiv
 
 theorem row_uniform : Uniform row :=
   uniform_equiv (uniform_pair (uniform_equiv (gateData_uniform 5 4) _)
-    (uniform_pair (uniform_equiv (gateData_uniform 4 4) _)
+    (uniform_pair (uniform_equiv (gateData_uniform 4 3) _)
       (uniform_equiv (gateData_uniform 5 5) _))) _
 
 def publicEquiv : CurvePublicSample × Vector RowPublicSample FieldMacToECMac.outputMacCount ≃
@@ -284,8 +284,8 @@ def publicEquiv : CurvePublicSample × Vector RowPublicSample FieldMacToECMac.ou
   left_inv _ := rfl
   right_inv _ := rfl
 
-/-- The public sample needs 906533 bounded integer draws. It samples no oracle tables. -/
-def publicSample : Code PublicSample 906533 :=
+/-- The public sample needs 837191 bounded integer draws. It samples no oracle tables. -/
+def publicSample : Code PublicSample 837191 :=
   (((gateData 3 5).map curveEquiv).pair (row.vector FieldMacToECMac.outputMacCount)).map publicEquiv
 
 theorem public_uniform : Uniform publicSample :=
@@ -319,7 +319,7 @@ theorem inputKey_uniform : Uniform inputKey :=
  abbrev OfflineCoin := PublicSample × (InputMacKey × BaseField)
 
 /-- This sampler constructs the complete private coin outside the oracle environment. -/
-def offline : Code OfflineCoin 907550 := publicSample.pair (inputKey.pair field)
+def offline : Code OfflineCoin 838208 := publicSample.pair (inputKey.pair field)
 
 theorem offline_uniform : Uniform offline :=
   uniform_pair public_uniform (uniform_pair inputKey_uniform field_uniform)

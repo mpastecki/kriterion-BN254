@@ -791,18 +791,15 @@ theorem biquadraticXGateSchedule_length
 /-- This schedule programs the four active adaptors of one RCB Y-coordinate. -/
 def biquadraticYGateSchedule
     (output : Fin FieldMacToECMac.outputMacCount)
-    (y8Table y10Table x7Table x9Table :
+    (y8Table x7Table x9Table :
       Vector BitAdaptor.Table coordinateBitCount)
     (input : AffineInput) (inputMac : InputMac)
-    (y8Targets y10Targets x7Targets x9Targets : Fin coordinateBitCount → BaseField)
+    (y8Targets x7Targets x9Targets : Fin coordinateBitCount → BaseField)
     (y8Lifts : ∀ index, HashLift (y8Targets index))
-    (y10Lifts : ∀ index, HashLift (y10Targets index))
     (x7Lifts : ∀ index, HashLift (x7Targets index))
     (x9Lifts : ∀ index, HashLift (x9Targets index)) : List GateDirective :=
-  digitGateSchedule (.point output .y .y8) y8Table (coordinateValues input.y)
-      inputMac.y y8Targets y8Lifts ++
-    digitGateSchedule (.point output .y .y10) y10Table (coordinateValues input.y)
-      inputMac.y y10Targets y10Lifts ++
+  digitGateSchedule (.point output .y .y8) y8Table (coordinateValues input.x)
+      inputMac.x y8Targets y8Lifts ++
     digitGateSchedule (.point output .y .x7) x7Table (coordinateValues input.x)
       inputMac.x x7Targets x7Lifts ++
     digitGateSchedule (.point output .y .x9) x9Table (coordinateValues input.x)
@@ -810,17 +807,16 @@ def biquadraticYGateSchedule
 
 theorem biquadraticYGateSchedule_length
     (output : Fin FieldMacToECMac.outputMacCount)
-    (y8Table y10Table x7Table x9Table :
+    (y8Table x7Table x9Table :
       Vector BitAdaptor.Table coordinateBitCount)
     (input : AffineInput) (inputMac : InputMac)
-    (y8Targets y10Targets x7Targets x9Targets : Fin coordinateBitCount → BaseField)
+    (y8Targets x7Targets x9Targets : Fin coordinateBitCount → BaseField)
     (y8Lifts : ∀ index, HashLift (y8Targets index))
-    (y10Lifts : ∀ index, HashLift (y10Targets index))
     (x7Lifts : ∀ index, HashLift (x7Targets index))
     (x9Lifts : ∀ index, HashLift (x9Targets index)) :
-    (biquadraticYGateSchedule output y8Table y10Table x7Table x9Table
-      input inputMac y8Targets y10Targets x7Targets x9Targets
-      y8Lifts y10Lifts x7Lifts x9Lifts).length = 4 * coordinateBitCount := by
+    (biquadraticYGateSchedule output y8Table x7Table x9Table
+      input inputMac y8Targets x7Targets x9Targets
+      y8Lifts x7Lifts x9Lifts).length = 3 * coordinateBitCount := by
   simp only [biquadraticYGateSchedule, List.length_append, digitGateSchedule_length]
   omega
 
@@ -926,19 +922,15 @@ structure BiquadraticYRequest where
   c4 : BaseField
   c5 : BaseField
   y8Table : Vector BitAdaptor.Table coordinateBitCount
-  y10Table : Vector BitAdaptor.Table coordinateBitCount
   x7Table : Vector BitAdaptor.Table coordinateBitCount
   x9Table : Vector BitAdaptor.Table coordinateBitCount
   y8Targets : Fin coordinateBitCount → BaseField
-  y10Targets : Fin coordinateBitCount → BaseField
   x7Targets : Fin coordinateBitCount → BaseField
   x9Targets : Fin coordinateBitCount → BaseField
   y8Quotients : Fin coordinateBitCount → HashLiftQuotient
-  y10Quotients : Fin coordinateBitCount → HashLiftQuotient
   x7Quotients : Fin coordinateBitCount → HashLiftQuotient
   x9Quotients : Fin coordinateBitCount → HashLiftQuotient
   y8Lifts : ∀ index, HashLift (y8Targets index)
-  y10Lifts : ∀ index, HashLift (y10Targets index)
   x7Lifts : ∀ index, HashLift (x7Targets index)
   x9Lifts : ∀ index, HashLift (x9Targets index)
 
@@ -953,22 +945,22 @@ def BiquadraticYRequest.table (request : BiquadraticYRequest) : Biquadratic.Tabl
   x9 := some request.x9Table
   y6 := none
   y8 := some request.y8Table
-  y10 := some request.y10Table
+  y10 := none
 }
 
 def BiquadraticYRequest.schedule (request : BiquadraticYRequest)
     (output : Fin FieldMacToECMac.outputMacCount)
     (input : AffineInput) (inputMac : InputMac) : List GateDirective :=
-  biquadraticYGateSchedule output request.y8Table request.y10Table request.x7Table
-    request.x9Table input inputMac request.y8Targets request.y10Targets request.x7Targets
-    request.x9Targets request.y8Lifts request.y10Lifts request.x7Lifts request.x9Lifts
+  biquadraticYGateSchedule output request.y8Table request.x7Table
+    request.x9Table input inputMac request.y8Targets request.x7Targets
+    request.x9Targets request.y8Lifts request.x7Lifts request.x9Lifts
 
 def BiquadraticYRequest.result (request : BiquadraticYRequest)
     (input : AffineInput) : BaseField :=
   request.c0 + request.c1 * input.x + request.c4 * input.x ^ 2 +
-    request.c5 * input.y ^ 2 + DigitAdaptor.fromBits request.x7Targets * input.x +
-    DigitAdaptor.fromBits request.y8Targets * input.y +
-    DigitAdaptor.fromBits request.x9Targets + DigitAdaptor.fromBits request.y10Targets
+    request.c5 * input.x ^ 3 + DigitAdaptor.fromBits request.x7Targets * input.x +
+    DigitAdaptor.fromBits request.y8Targets * input.x ^ 2 +
+    DigitAdaptor.fromBits request.x9Targets
 
 /-- This request contains the public data and selected targets for one RCB Z-coordinate. -/
 structure BiquadraticZRequest where
@@ -1029,7 +1021,7 @@ def BiquadraticZRequest.result (request : BiquadraticZRequest)
     DigitAdaptor.fromBits request.y8Targets * input.y +
     DigitAdaptor.fromBits request.x9Targets + DigitAdaptor.fromBits request.y10Targets
 
-/-- This schedule programs all 13 active adaptors of one complete RCB row. -/
+/-- This schedule programs all 12 active adaptors of one complete RCB row. -/
 def biquadraticRowGateSchedule (output : Fin FieldMacToECMac.outputMacCount)
     (input : AffineInput) (inputMac : InputMac)
     (x : BiquadraticXRequest) (y : BiquadraticYRequest)
@@ -1043,7 +1035,7 @@ theorem biquadraticRowGateSchedule_length
     (x : BiquadraticXRequest) (y : BiquadraticYRequest)
     (z : BiquadraticZRequest) :
     (biquadraticRowGateSchedule output input inputMac x y z).length =
-      13 * coordinateBitCount := by
+      12 * coordinateBitCount := by
   simp only [biquadraticRowGateSchedule, List.length_append,
     BiquadraticXRequest.schedule, BiquadraticYRequest.schedule,
     BiquadraticZRequest.schedule, biquadraticXGateSchedule_length,
@@ -1078,7 +1070,7 @@ def BiquadraticRowRequest.result (request : BiquadraticRowRequest)
 theorem BiquadraticRowRequest.schedule_length (request : BiquadraticRowRequest)
     (output : Fin FieldMacToECMac.outputMacCount)
     (input : AffineInput) (inputMac : InputMac) :
-    (request.schedule output input inputMac).length = 13 * coordinateBitCount :=
+    (request.schedule output input inputMac).length = 12 * coordinateBitCount :=
   biquadraticRowGateSchedule_length output input inputMac request.x request.y request.z
 
 /-- This request contains the public data and selected targets for curve membership. -/
@@ -1166,7 +1158,7 @@ def pointGateResults (requests : PointGateRequests)
 theorem pointGateSchedule_length (requests : PointGateRequests)
     (input : AffineInput) (inputMac : InputMac) :
     (pointGateSchedule requests input inputMac).length =
-      FieldMacToECMac.outputMacCount * 13 * coordinateBitCount := by
+      FieldMacToECMac.outputMacCount * 12 * coordinateBitCount := by
   rw [pointGateSchedule, List.length_flatten, List.map_ofFn]
   change (List.ofFn fun output =>
     ((requests.get output).schedule output input inputMac).length).sum = _
@@ -1225,7 +1217,7 @@ theorem pipelineGateSchedule_length_value (curve : CurveGateRequest)
     (points : PointGateRequests) (input : AffineInput)
     (curveInputMac pointInputMac : InputMac) :
     (pipelineGateSchedule curve points input curveInputMac pointInputMac).length =
-      301752 := by
+      278638 := by
   rw [pipelineGateSchedule_length]
   decide
 
@@ -1233,7 +1225,7 @@ theorem linkedPipelineGateSchedule_length (state : SimulatorState)
     (curve : CurveGateRequest) (points : PointGateRequests)
     (input : AffineInput) (inputMac : InputMac) :
     (linkedPipelineGateSchedule state curve points input inputMac).length =
-      301752 := by
+      278638 := by
   exact pipelineGateSchedule_length_value curve points input inputMac
     (linkedPointInputMac state curve input inputMac)
 
@@ -1733,23 +1725,22 @@ theorem biquadraticXGateSchedule_evaluate
   rw [y6Value, y8Value, y10Value, x9Value]
   ring
 
-/-- A satisfied four-adaptor schedule returns the requested RCB Y-coordinate. -/
+/-- A satisfied three-adaptor schedule returns the represented Y-coordinate. -/
 theorem biquadraticYGateSchedule_evaluate
     (state : SimulatorState) (output : Fin FieldMacToECMac.outputMacCount)
     (c0 c1 c4 c5 : BaseField)
-    (y8Table y10Table x7Table x9Table :
+    (y8Table x7Table x9Table :
       Vector BitAdaptor.Table coordinateBitCount)
     (input : AffineInput) (inputMac : InputMac)
-    (y8Targets y10Targets x7Targets x9Targets : Fin coordinateBitCount → BaseField)
+    (y8Targets x7Targets x9Targets : Fin coordinateBitCount → BaseField)
     (y8Lifts : ∀ index, HashLift (y8Targets index))
-    (y10Lifts : ∀ index, HashLift (y10Targets index))
     (x7Lifts : ∀ index, HashLift (x7Targets index))
     (x9Lifts : ∀ index, HashLift (x9Targets index))
     (satisfied : GateScheduleSatisfied state
-      (biquadraticYGateSchedule output y8Table y10Table x7Table x9Table
-        input inputMac y8Targets y10Targets x7Targets x9Targets
-        y8Lifts y10Lifts x7Lifts x9Lifts)) :
-    Biquadratic.evaluate (Pipeline.biquadraticOracles state.fixedOracle output .y) {
+      (biquadraticYGateSchedule output y8Table x7Table x9Table
+        input inputMac y8Targets x7Targets x9Targets
+        y8Lifts x7Lifts x9Lifts)) :
+    Biquadratic.evaluateY (Pipeline.biquadraticOracles state.fixedOracle output .y) {
         c0 := some c0
         c1 := some c1
         c2 := none
@@ -1760,21 +1751,14 @@ theorem biquadraticYGateSchedule_evaluate
         x9 := some x9Table
         y6 := none
         y8 := some y8Table
-        y10 := some y10Table
+        y10 := none
       } input inputMac =
-      c0 + c1 * input.x + c4 * input.x ^ 2 + c5 * input.y ^ 2 +
+      c0 + c1 * input.x + c4 * input.x ^ 2 + c5 * input.x ^ 3 +
         DigitAdaptor.fromBits x7Targets * input.x +
-        DigitAdaptor.fromBits y8Targets * input.y + DigitAdaptor.fromBits x9Targets +
-        DigitAdaptor.fromBits y10Targets := by
+        DigitAdaptor.fromBits y8Targets * input.x ^ 2 + DigitAdaptor.fromBits x9Targets := by
   have y8Satisfied : GateScheduleSatisfied state
-      (digitGateSchedule (.point output .y .y8) y8Table (coordinateValues input.y)
-        inputMac.y y8Targets y8Lifts) := by
-    intro directive member
-    apply satisfied directive
-    simp [biquadraticYGateSchedule, member]
-  have y10Satisfied : GateScheduleSatisfied state
-      (digitGateSchedule (.point output .y .y10) y10Table (coordinateValues input.y)
-        inputMac.y y10Targets y10Lifts) := by
+      (digitGateSchedule (.point output .y .y8) y8Table (coordinateValues input.x)
+        inputMac.x y8Targets y8Lifts) := by
     intro directive member
     apply satisfied directive
     simp [biquadraticYGateSchedule, member]
@@ -1791,17 +1775,15 @@ theorem biquadraticYGateSchedule_evaluate
     apply satisfied directive
     simp [biquadraticYGateSchedule, member]
   have y8Value := digitGateSchedule_evaluateValue state (.point output .y .y8)
-    y8Table (coordinateValues input.y) inputMac.y y8Targets y8Lifts y8Satisfied
-  have y10Value := digitGateSchedule_evaluateValue state (.point output .y .y10)
-    y10Table (coordinateValues input.y) inputMac.y y10Targets y10Lifts y10Satisfied
+    y8Table (coordinateValues input.x) inputMac.x y8Targets y8Lifts y8Satisfied
   have x7Value := digitGateSchedule_evaluateValue state (.point output .y .x7)
     x7Table (coordinateValues input.x) inputMac.x x7Targets x7Lifts x7Satisfied
   have x9Value := digitGateSchedule_evaluateValue state (.point output .y .x9)
     x9Table (coordinateValues input.x) inputMac.x x9Targets x9Lifts x9Satisfied
-  simp only [Biquadratic.evaluate, Pipeline.biquadraticOracles,
+  simp only [Biquadratic.evaluateY, Pipeline.biquadraticOracles,
     Biquadratic.evaluateDigit, Biquadratic.coefficient,
     Option.getD_some, Option.getD_none]
-  rw [y8Value, y10Value, x7Value, x9Value]
+  rw [y8Value, x7Value, x9Value]
   ring
 
 /-- A satisfied five-adaptor schedule returns the requested RCB Z-coordinate. -/
@@ -1895,7 +1877,7 @@ theorem BiquadraticRowRequest.evaluate (request : BiquadraticRowRequest)
       x := Biquadratic.evaluate
         (Pipeline.biquadraticOracles state.fixedOracle output .x)
         request.table.x input inputMac
-      y := Biquadratic.evaluate
+      y := Biquadratic.evaluateY
         (Pipeline.biquadraticOracles state.fixedOracle output .y)
         request.table.y input inputMac
       z := Biquadratic.evaluate
@@ -1927,15 +1909,15 @@ theorem BiquadraticRowRequest.evaluate (request : BiquadraticRowRequest)
         request.x.y10Table request.x.x9Table input inputMac request.x.y6Targets
         request.x.y8Targets request.x.y10Targets request.x.x9Targets request.x.y6Lifts
         request.x.y8Lifts request.x.y10Lifts request.x.x9Lifts xSatisfied
-  have yValue : Biquadratic.evaluate
+  have yValue : Biquadratic.evaluateY
       (Pipeline.biquadraticOracles state.fixedOracle output .y)
       request.y.table input inputMac = request.y.result input := by
     simpa only [BiquadraticYRequest.table, BiquadraticYRequest.result,
       BiquadraticYRequest.schedule] using
       biquadraticYGateSchedule_evaluate state output request.y.c0 request.y.c1
-        request.y.c4 request.y.c5 request.y.y8Table request.y.y10Table request.y.x7Table
-        request.y.x9Table input inputMac request.y.y8Targets request.y.y10Targets
-        request.y.x7Targets request.y.x9Targets request.y.y8Lifts request.y.y10Lifts
+        request.y.c4 request.y.c5 request.y.y8Table request.y.x7Table
+        request.y.x9Table input inputMac request.y.y8Targets
+        request.y.x7Targets request.y.x9Targets request.y.y8Lifts
         request.y.x7Lifts request.y.x9Lifts ySatisfied
   have zValue : Biquadratic.evaluate
       (Pipeline.biquadraticOracles state.fixedOracle output .z)
@@ -2121,7 +2103,7 @@ theorem programBiquadraticRowGateSchedule_evaluate
       (biquadraticRowGateSchedule output input inputMac x y z)
     Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .x)
         x.table input inputMac = x.result input ∧
-      Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .y)
+      Biquadratic.evaluateY (Pipeline.biquadraticOracles final.fixedOracle output .y)
         y.table input inputMac = y.result input ∧
       Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .z)
         z.table input inputMac = z.result input := by
@@ -2145,7 +2127,7 @@ theorem programBiquadraticRowGateSchedule_evaluate
     simp [schedule, biquadraticRowGateSchedule, member]
   change Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .x)
       x.table input inputMac = x.result input ∧
-    Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .y)
+    Biquadratic.evaluateY (Pipeline.biquadraticOracles final.fixedOracle output .y)
       y.table input inputMac = y.result input ∧
     Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .z)
       z.table input inputMac = z.result input
@@ -2160,8 +2142,8 @@ theorem programBiquadraticRowGateSchedule_evaluate
     · simpa only [BiquadraticYRequest.table, BiquadraticYRequest.result,
         BiquadraticYRequest.schedule] using
         biquadraticYGateSchedule_evaluate final output y.c0 y.c1 y.c4 y.c5
-          y.y8Table y.y10Table y.x7Table y.x9Table input inputMac y.y8Targets
-          y.y10Targets y.x7Targets y.x9Targets y.y8Lifts y.y10Lifts y.x7Lifts
+          y.y8Table y.x7Table y.x9Table input inputMac y.y8Targets
+          y.x7Targets y.x9Targets y.y8Lifts y.x7Lifts
           y.x9Lifts ySatisfied
     · simpa only [BiquadraticZRequest.table, BiquadraticZRequest.result,
         BiquadraticZRequest.schedule] using

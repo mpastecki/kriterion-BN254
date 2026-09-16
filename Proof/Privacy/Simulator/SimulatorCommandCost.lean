@@ -93,8 +93,8 @@ theorem scheduleCommandsWithCost_bound (schedule : List GateDirective) :
 
 /-- The complete valid schedule has this command-construction budget. -/
 theorem scheduleCommandsWithCost_valid_bound (schedule : List GateDirective)
-    (bounded : schedule.length ≤ 301752) :
-    (scheduleCommandsWithCost schedule).2 ≤ 30175200 := by
+    (bounded : schedule.length ≤ 278638) :
+    (scheduleCommandsWithCost schedule).2 ≤ 27863800 := by
   exact (scheduleCommandsWithCost_bound schedule).trans (Nat.mul_le_mul_left 100 bounded)
 
 end Kriterion.ArgoMAC.Security.SimulatorCommandCost

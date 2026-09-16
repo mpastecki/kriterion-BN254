@@ -24,14 +24,14 @@ private theorem uniform_pair_bind {A B C : Type*} [Fintype A] [Nonempty A] [Fint
   exact PMF.bind_comm _ _ _
 
 private theorem collisionLoss_toReal (budget : Nat) :
-    (243390420 / (2 : ENNReal) ^ 128 + (182 * budget : Nat) / (2 : ENNReal) ^ 128).toReal =
-      243390420 / (2 : ℝ) ^ 128 + (182 * budget : Nat) / (2 : ℝ) ^ 128 := by
+    (224668080 / (2 : ENNReal) ^ 128 + (182 * budget : Nat) / (2 : ENNReal) ^ 128).toReal =
+      224668080 / (2 : ℝ) ^ 128 + (182 * budget : Nat) / (2 : ℝ) ^ 128 := by
   rw [ENNReal.toReal_add (by finiteness) (by finiteness)]
   simp only [ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_natCast, ENNReal.toReal_ofNat]
 
 private theorem collisionLoss_real_bound (budget : Nat) (probability : ENNReal)
-    (bound : probability ≤ 243390420 / (2 : ENNReal) ^ 128 + (182 * budget : Nat) / (2 : ENNReal) ^ 128) :
-    probability.toReal ≤ 243390420 / (2 : ℝ) ^ 128 + (182 * budget : Nat) / (2 : ℝ) ^ 128 := by
+    (bound : probability ≤ 224668080 / (2 : ENNReal) ^ 128 + (182 * budget : Nat) / (2 : ENNReal) ^ 128) :
+    probability.toReal ≤ 224668080 / (2 : ℝ) ^ 128 + (182 * budget : Nat) / (2 : ℝ) ^ 128 := by
   rw [← collisionLoss_toReal]
   exact ENNReal.toReal_mono (by finiteness) bound
 
@@ -107,7 +107,7 @@ theorem concreteRetainedFlags_mass_le [FieldCertificate] [GroupCertificate] [Fin
     (scalar : ScalarField) :
     (concreteRetainedFlags adversary parameter auxiliary scalar).toOuterMeasure
       {flags | flags.1 = true ∨ flags.2 = true} ≤
-        243390420 / (2 : ENNReal) ^ 128 +
+        224668080 / (2 : ENNReal) ^ 128 +
           (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ENNReal) ^ 128 := by
   rw [concreteRetainedFlags_split]
   apply Probability.bind_event_le
@@ -205,7 +205,7 @@ private theorem goodRetainedBadSource_public [FieldCertificate] [GroupCertificat
 theorem goodRetainedBadSource_mass_le [FieldCertificate] [GroupCertificate] [Fintype Block]
     (scalar : ScalarField) :
     (goodRetainedBadSource adversary parameter auxiliary scalar).toOuterMeasure {flag | flag = true} ≤
-      243390420 / (2 : ENNReal) ^ 128 +
+      224668080 / (2 : ENNReal) ^ 128 +
         (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ENNReal) ^ 128 := by
   apply le_trans _ (concreteRetainedFlags_mass_le adversary parameter auxiliary scalar)
   rw [goodRetainedBadSource_public, concreteRetainedFlags]
@@ -273,9 +273,9 @@ private theorem goodSharedRetainedBadSource_eq [FieldCertificate] [GroupCertific
 theorem fullRetainedBadSource_mass_le [FieldCertificate] [GroupCertificate]
     (scalar : ScalarField) (witness : Garbling.Randomness) :
     ((fullRetainedBadSource adversary parameter auxiliary scalar witness).toOuterMeasure {flag | flag = true}).toReal ≤
-      243390420 / (2 : ℝ) ^ 128 +
+      224668080 / (2 : ℝ) ^ 128 +
         (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ℝ) ^ 128 +
-        (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 := by
+        (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 := by
   have rounding := sharedRetainedHash_observation_bound witness parameter
     (fullRetainedBadObserver adversary parameter auxiliary scalar) {flag | flag = true}
   have good := goodRetainedBadSource_mass_le adversary parameter auxiliary scalar

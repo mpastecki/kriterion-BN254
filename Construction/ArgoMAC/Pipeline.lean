@@ -12,7 +12,7 @@ namespace Kriterion.ArgoMAC.Pipeline
 open BN254 Cryptography
 
 def curveDigitAdaptorCount : Nat := 5
-def pointDigitAdaptorsPerOutput : Nat := 13
+def pointDigitAdaptorsPerOutput : Nat := 12
 
 def digitAdaptorCount : Nat :=
   curveDigitAdaptorCount + FieldMacToECMac.outputMacCount * pointDigitAdaptorsPerOutput
@@ -30,7 +30,7 @@ def curveBucketCount : Nat :=
 /-- One point bucket serves one gate for each output digit. -/
 def digitsPerBucket : Nat := FieldMacToECMac.outputMacCount
 
-theorem pointBucketCountValue : pointBucketCount = 16510 := by decide
+theorem pointBucketCountValue : pointBucketCount = 15240 := by decide
 theorem curveBucketCountValue : curveBucketCount = 6350 := by decide
 
 inductive CurveAdaptor
@@ -200,7 +200,9 @@ theorem evaluateEncoded [FieldCertificate]
   rw [← InputMacKey.encodeOfAffine inputKey input]
   rw [EncPRF.transformEncode]
   rw [InputMacKey.encodeOfAffine]
-  rw [FieldMacToECMac.evaluateEncoded]
-  exact FieldMacToECMac.rowsForOutputKeysSparse outputKeys pointRandomness
+  rw [FieldMacToECMac.evaluateEncoded _ _ _ _ _
+    (FieldMacToECMac.rowsForOutputKeysSparse outputKeys pointRandomness)]
+  rw [FieldMacToECMac.representedResult_onCurve _ input
+    (FieldMacToECMac.rowsForOutputKeysSparse outputKeys pointRandomness) inputOnCurve]
 
 end Kriterion.ArgoMAC.Pipeline
