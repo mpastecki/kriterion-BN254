@@ -300,7 +300,7 @@ private theorem fullAdaptiveSource_rounding_bound [FieldCertificate] [GroupCerti
           ((RawCircuitGate → BaseField × HashLiftQuotient) × CircuitMaskTables)).bind fun source =>
             retainedSourceRun scalar (maskRetainedTape randomness)
               (sharedCircuitMaskSample randomness source.1 source.2) choose observe)).toOuterMeasure
-                event).toReal| ≤ (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384 := by
+                event).toReal| ≤ (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384 := by
   have full := sharedHashSource_observation_eq witness parameter
     (fun retained source => fullSourceRun scalar retained source choose observe fallback)
   change fullAdaptiveSource scalar witness parameter choose observe fallback =
@@ -321,11 +321,11 @@ private theorem fullAdaptiveSource_rounding_bound [FieldCertificate] [GroupCerti
   have mapped := congrArg
     ((PMF.uniformOfFintype ((RawCircuitGate → BaseField × HashLiftQuotient) × CircuitHashRest)).bind)
     (funext fun pair => fullSourceKernel_good scalar choose observe fallback pair)
-  have count : (Fintype.card RawCircuitGate : ℝ) = 301752 := by
+  have count : (Fintype.card RawCircuitGate : ℝ) = 278638 := by
     exact_mod_cast rawCircuitGate_card
   rw [count] at bound
   exact sourceObservation_transport (Observation := Observation) (event := event)
-    (error := (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384) full (good.trans mapped.symm) bound
+    (error := (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384) full (good.trans mapped.symm) bound
 
 /-- The full source reaches the ideal output source before the final transcript comparison. -/
 theorem adaptiveSource_observation_bound [FieldCertificate] [GroupCertificate]
@@ -338,7 +338,7 @@ theorem adaptiveSource_observation_bound [FieldCertificate] [GroupCertificate]
     (event : Set Observation) :
     |((fullAdaptiveSource scalar witness parameter choose observe fallback).toOuterMeasure event).toReal -
       ((idealSourceRun scalar choose observe).toOuterMeasure event).toReal| ≤
-      (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384 + (2 : ℝ) ^ (-240 : ℤ) := by
+      (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384 + (2 : ℝ) ^ (-240 : ℤ) := by
   have rounding := fullAdaptiveSource_rounding_bound scalar witness parameter choose observe fallback event
   have output := sharedSource_ideal_observation_bound scalar witness parameter choose observe event
   have triangle := abs_sub_le

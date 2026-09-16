@@ -67,6 +67,29 @@ theorem uniform_subtract_field (offset : BaseField) :
       PMF.uniformOfFintype BaseField :=
   map_uniformOfFintype_equivBetween (subtractFieldEquiv offset)
 
+/-- The new terminal pivot has a nonzero coefficient in the fixed base ring. -/
+theorem cubicPivotCoefficients : (1 : BaseField) ≠ 0 ∧ (-2 : BaseField) ≠ 0 := by decide
+
+private def doubleFieldEquiv : BaseField ≃ BaseField where
+  toFun value := 2 * value
+  invFun value := (((baseFieldModulus + 1) / 2 : Nat) : BaseField) * value
+  left_inv value := by
+    have half : (((baseFieldModulus + 1) / 2 : Nat) : BaseField) * 2 = 1 := by decide
+    change (((baseFieldModulus + 1) / 2 : Nat) : BaseField) * (2 * value) = value
+    rw [← mul_assoc, half, one_mul]
+  right_inv value := by
+    have half : (2 : BaseField) * (((baseFieldModulus + 1) / 2 : Nat) : BaseField) = 1 := by decide
+    change (2 : BaseField) * ((((baseFieldModulus + 1) / 2 : Nat) : BaseField) * value) = value
+    rw [← mul_assoc, half, one_mul]
+
+theorem uniform_subtract_double_field (offset : BaseField) :
+    (PMF.uniformOfFintype BaseField).map (fun seed => offset - 2 * seed) =
+      PMF.uniformOfFintype BaseField := by
+  have law := congrArg (fun distribution => distribution.map (fun value => offset - value))
+    (map_uniformOfFintype_equivBetween doubleFieldEquiv)
+  rw [PMF.map_comp, uniform_subtract_field] at law
+  exact law
+
 /-- The pivot transport preserves a fresh independent hash quotient. -/
 theorem uniform_subtract_field_quotient (offset : BaseField) :
     (PMF.uniformOfFintype (BaseField × HashLiftQuotient)).map
@@ -179,6 +202,7 @@ private theorem fromBits_update_zero {count : Nat}
   simp_rw [Function.update_self, Function.update_of_ne (Fin.succ_ne_zero _)]
   ring
 
+
 /-- The free low target masks the retargeted pivot with coefficient minus one. -/
 theorem XPublicSample.pivot_seed (sample : XPublicSample)
     (input : AffineInput) (target seed : BaseField) :
@@ -195,20 +219,30 @@ theorem XPublicSample.pivot_seed (sample : XPublicSample)
   rw [fromBits_update_zero]
   ring
 
-/-- The free low target masks the retargeted pivot with coefficient minus one. -/
+/-- A free bit of the terminal mask supplies the pivot with coefficient minus two. -/
 theorem YPublicSample.pivot_seed (sample : YPublicSample)
     (input : AffineInput) (target seed : BaseField) :
-    (({sample with targets := (Function.update sample.targets 1
-      (Function.update (sample.targets 1) 0 seed))} : YPublicSample).request.retarget
+    (({sample with targets := (Function.update sample.targets 2
+      (Function.update (sample.targets 2) 1 seed))} : YPublicSample).request.retarget
         input target).x9Targets 0 =
-      (sample.request.retarget input target).x9Targets 0 + sample.targets 1 0 - seed := by
+      (sample.request.retarget input target).x9Targets 0 + 2 * sample.targets 2 1 - 2 * seed := by
   simp only [YPublicSample.request, BiquadraticYRequest.retarget,
     BiquadraticYRequest.result, retargetBits, Fin.cases_zero]
   simp only [Function.update_self,
-    Function.update_of_ne (by decide : (0 : Fin 4) ≠ 1),
-    Function.update_of_ne (by decide : (2 : Fin 4) ≠ 1),
-    Function.update_of_ne (by decide : (3 : Fin 4) ≠ 1)]
-  rw [fromBits_update_zero]
+    Function.update_of_ne (by decide : (0 : Fin 3) ≠ 2),
+    Function.update_of_ne (by decide : (1 : Fin 3) ≠ 2)]
+  have tail : (fun index : Fin 253 => (Function.update (sample.targets 2) 1 seed) index.succ) =
+      Function.update (fun index : Fin 253 => sample.targets 2 index.succ) 0 seed := by
+    funext index
+    by_cases zero : index = 0
+    · subst index; simp
+    · have different : index.succ ≠ (1 : Fin coordinateBitCount) := by
+        intro same
+        apply zero
+        exact Fin.ext (Nat.succ.inj (congrArg Fin.val same))
+      simp [Function.update_of_ne zero, Function.update_of_ne different]
+  rw [tail, fromBits_update_zero]
+  simp only [show (Fin.succ (0 : Fin 253) : Fin coordinateBitCount) = 1 from rfl]
   ring
 
 /-- The free low target masks the retargeted pivot with coefficient minus one. -/
@@ -259,11 +293,11 @@ theorem XPublicSample.pivot_uniform (sample : XPublicSample)
 theorem YPublicSample.pivot_uniform (sample : YPublicSample)
     (input : AffineInput) (target : BaseField) :
     (PMF.uniformOfFintype BaseField).map (fun seed =>
-      (({sample with targets := (Function.update sample.targets 1
-        (Function.update (sample.targets 1) 0 seed))} : YPublicSample).request.retarget
+      (({sample with targets := (Function.update sample.targets 2
+        (Function.update (sample.targets 2) 1 seed))} : YPublicSample).request.retarget
           input target).x9Targets 0) = PMF.uniformOfFintype BaseField := by
   simp only [YPublicSample.pivot_seed]
-  exact uniform_subtract_field _
+  exact uniform_subtract_double_field _
 
 /-- A fresh free low target makes the actual pivot uniform. -/
 theorem ZPublicSample.pivot_uniform (sample : ZPublicSample)

@@ -1,4 +1,4 @@
-import Proof.Correctness
-import Proof.Privacy
-import Proof.LamportCompatibility
-import Proof.CiphertextSize
+import Proof.DirectDisclosureCorrectness
+import Proof.DirectDisclosurePointwise
+import Proof.DirectDisclosureSolutionFactory
+import Proof.TruncatedDirectDisclosureSolutionFactory

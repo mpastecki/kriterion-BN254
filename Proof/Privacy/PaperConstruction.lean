@@ -169,6 +169,6 @@ theorem sharedTranslation_requires_equal_tweaks (entry paper : Equiv.Perm Block)
 
 /-- The proved entry uses five slots and 91 digit positions. -/
 theorem variant_parameters : bucketSlotCount = 5 ∧ digitsPerBucket = 91 ∧
-    pointBucketCount = 16510 ∧ curveBucketCount = 6350 := by decide
+    pointBucketCount = 15240 ∧ curveBucketCount = 6350 := by decide
 
 end Kriterion.ArgoMAC.PaperConstruction

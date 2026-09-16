@@ -11,7 +11,7 @@ noncomputable section
 def circuitGateKey (pointKey inputKey : InputMacKey) : RawCircuitGate → BitAdaptor.Key
   | .inl (adaptor, bit) => (![inputKey.x, inputKey.x, inputKey.x, inputKey.y, inputKey.y] adaptor).get bit
   | .inr (_, .inl (adaptor, bit)) => (![pointKey.y, pointKey.y, pointKey.y, pointKey.x] adaptor).get bit
-  | .inr (_, .inr (.inl (adaptor, bit))) => (![pointKey.y, pointKey.y, pointKey.x, pointKey.x] adaptor).get bit
+  | .inr (_, .inr (.inl (adaptor, bit))) => (![pointKey.x, pointKey.x, pointKey.x] adaptor).get bit
   | .inr (_, .inr (.inr (adaptor, bit))) =>
       (![pointKey.y, pointKey.y, pointKey.y, pointKey.x, pointKey.x] adaptor).get bit
 
@@ -41,8 +41,8 @@ def circuitSourceSlope (source : CircuitMaskSample) : RawCircuitGate → BaseFie
         -(data.1 0 + DigitAdaptor.fromBits (data.2 0))] adaptor
   | .inr (row, .inr (.inl (adaptor, _))) =>
       let data := (source.2 row).2.1.1
-      ![-data.1 2, -DigitAdaptor.fromBits (data.2 0), -data.1 1,
-        -(data.1 0 + DigitAdaptor.fromBits (data.2 2))] adaptor
+      ![-data.1 2, -(data.1 1 + DigitAdaptor.fromBits (data.2 0)),
+        -(data.1 0 + DigitAdaptor.fromBits (data.2 1))] adaptor
   | .inr (row, .inr (.inr (adaptor, _))) =>
       let data := (source.2 row).2.2.1
       ![-data.1 1, -data.1 3, -(data.1 0 + DigitAdaptor.fromBits (data.2 1)),
@@ -247,7 +247,7 @@ def pipelineGateTable (table : Pipeline.Table) : RawCircuitGate → BitAdaptor.T
         (Vector.replicate coordinateBitCount defaultBitAdaptorTable)).get bit
   | .inr (row, .inr (.inl (adaptor, bit))) =>
       let part := table.pointMAC.y.get row
-      ((![part.y8, part.y10, part.x7, part.x9] adaptor).getD
+      ((![part.y8, part.x7, part.x9] adaptor).getD
         (Vector.replicate coordinateBitCount defaultBitAdaptorTable)).get bit
   | .inr (row, .inr (.inr (adaptor, bit))) =>
       let part := table.pointMAC.z.get row

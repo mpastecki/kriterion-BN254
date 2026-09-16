@@ -15,7 +15,7 @@ theorem inputMacCoordinate_bucket (mac : InputMac) (bucket : RawLabelBucket) :
   rcases bucket with ⟨kind, position⟩
   cases kind with
   | curve adaptor => cases adaptor <;> rfl
-  | point coordinate adaptor => cases adaptor <;> rfl
+  | point coordinate adaptor => cases coordinate <;> cases adaptor <;> rfl
 
 set_option maxHeartbeats 2000000 in
 /-- The actual independent source keeps its tag, transcript, and pad guard. -/

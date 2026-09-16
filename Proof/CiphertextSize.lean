@@ -9,7 +9,7 @@ theorem ciphertextSize [FieldCertificate] [GroupCertificate]
     (parameter : Nat) (scalar : NonZeroScalar) (randomness : Garbling.Randomness) :
     (encoding.encode
       ((Garbling.garbledCircuit construction).garble parameter scalar randomness).1).length =
-      9699931 := by
+      8956916 := by
   dsimp only [Garbling.garbledCircuit]
   have size := garble_length construction scalar randomness
   simpa only [Garbling.PublicCircuit] using size

@@ -164,13 +164,13 @@ theorem inputKey_bound : Bounded inputKeyWithCost 4067 :=
   mapped_bound _ (pair_bound _ _ (vector_bound _ key_bound _) (vector_bound _ key_bound _)) _ _
 
 /-- The counted offline sampler retains all backing arrays. -/
-def rowWithCost : Code (RowArrays × Nat) 9920 :=
-  pair (gateWithCost 5 4) (pair (gateWithCost 4 4) (gateWithCost 5 5))
+def rowWithCost : Code (RowArrays × Nat) 9158 :=
+  pair (gateWithCost 5 4) (pair (gateWithCost 4 3) (gateWithCost 5 5))
 
-def publicWithCost : Code (PublicArrays × Nat) 906533 :=
+def publicWithCost : Code (PublicArrays × Nat) 837191 :=
   pair (gateWithCost 3 5) (vector rowWithCost FieldMacToECMac.outputMacCount)
 
-def offlineWithCost : Code (OfflineArrays × Nat) 907550 :=
+def offlineWithCost : Code (OfflineArrays × Nat) 838208 :=
   pair publicWithCost (pair inputKeyWithCost fieldWithCost)
 
 theorem row_law : rowWithCost.law.map Prod.fst = rowArrays.law := by
@@ -185,14 +185,14 @@ theorem offline_law : offlineWithCost.law.map Prod.fst = offlineArrays.law := by
   simp only [offlineWithCost, pair_law, public_law, inputKey_law, field_law,
     offlineArrays, Code.pair_law]
 
-theorem row_bound : Bounded rowWithCost 29821 :=
-  pair_bound _ _ (gate_bound 5 4) (pair_bound _ _ (gate_bound 4 4) (gate_bound 5 5))
+theorem row_bound : Bounded rowWithCost 27532 :=
+  pair_bound _ _ (gate_bound 5 4) (pair_bound _ _ (gate_bound 4 3) (gate_bound 5 5))
 
-theorem public_bound : Bounded publicWithCost 2725264 :=
+theorem public_bound : Bounded publicWithCost 2516965 :=
   pair_bound _ _ (gate_bound 3 5) (vector_bound _ row_bound FieldMacToECMac.outputMacCount)
 
 /-- This bound includes every sampled array push and every value-record constructor. -/
-theorem offline_bound : Bounded offlineWithCost 2729337 :=
+theorem offline_bound : Bounded offlineWithCost 2521038 :=
   pair_bound _ _ public_bound (pair_bound _ _ inputKey_bound field_bound)
 
 abbrev OnlineCoin [FieldCertificate] := (Fin 90 → Point) × (Fin FieldMacToECMac.outputMacCount → NonZeroBase)
@@ -293,7 +293,7 @@ private theorem key_size : keyWithCost.DrawSizeLe (2 ^ 256) :=
 theorem offline_size : offlineWithCost.DrawSizeLe (2 ^ 256) :=
   pair_size _ _
     (pair_size _ _ (gate_size 3 5)
-      (vector_size _ (pair_size _ _ (gate_size 5 4) (pair_size _ _ (gate_size 4 4) (gate_size 5 5))) _))
+      (vector_size _ (pair_size _ _ (gate_size 5 4) (pair_size _ _ (gate_size 4 3) (gate_size 5 5))) _))
     (pair_size _ _ (mapped_size _
       (pair_size _ _ (vector_size _ key_size _) (vector_size _ key_size _)) _ _) field_size)
 

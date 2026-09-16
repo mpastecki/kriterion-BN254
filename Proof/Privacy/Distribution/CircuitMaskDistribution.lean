@@ -46,7 +46,7 @@ theorem maskSampleSplitEquiv_selected {Sample View Source Remainder : Type}
   rfl
 
 abbrev XMaskSample := XMaskData × BiquadraticSampleRemainder 4
-abbrev YMaskSample := YMaskData × BiquadraticSampleRemainder 4
+abbrev YMaskSample := YMaskData × BiquadraticSampleRemainder 3
 abbrev ZMaskSample := ZMaskData × BiquadraticSampleRemainder 5
 abbrev CurveMaskSample := CurveMaskData × BiquadraticSampleRemainder 5
 abbrev RowMaskSample := XMaskSample × YMaskSample × ZMaskSample
@@ -121,9 +121,9 @@ private theorem xSample_pivot (sample : XPublicSample)
 def YPublicSample.retargetMask (sample : YPublicSample)
     (input : AffineInput) (target : BaseField) : YPublicSample :=
   { sample with
-    targets := Function.update sample.targets 3
-      (retargetBits (sample.targets 3)
-        (target - sample.request.result input + DigitAdaptor.fromBits (sample.targets 3))) }
+    targets := Function.update sample.targets 2
+      (retargetBits (sample.targets 2)
+        (target - sample.request.result input + DigitAdaptor.fromBits (sample.targets 2))) }
 
 @[simp] theorem YPublicSample.retargetMask_request (sample : YPublicSample)
     (input : AffineInput) (target : BaseField) :
@@ -132,7 +132,7 @@ def YPublicSample.retargetMask (sample : YPublicSample)
 
 private theorem ySample_result (sample : YPublicSample) (input : AffineInput) :
     yMaskResult input (ySampleViewEquiv sample).1 = sample.request.result input := by
-  simp [yMaskResult, yMaskRest, ySampleViewEquiv, YPublicSample.request,
+  simp [yMaskResult, yMaskRest, CubicMasks.result, CubicMasks.rest, ySampleViewEquiv, YPublicSample.request,
     BiquadraticYRequest.result]
   ring
 
@@ -141,7 +141,7 @@ private theorem ySample_pivot (sample : YPublicSample)
     ySampleViewEquiv.symm (yMaskPivotShift (target - yMaskResult input (ySampleViewEquiv sample).1)
       (ySampleViewEquiv sample).1, (ySampleViewEquiv sample).2) = sample.retargetMask input target := by
   rw [ySample_result]
-  unfold yMaskPivotShift ySampleViewEquiv YPublicSample.retargetMask
+  unfold yMaskPivotShift CubicMasks.pivotShift ySampleViewEquiv YPublicSample.retargetMask
   dsimp
   rw [lowMaskShift_eq_retargetBits]
   rw [add_comm (DigitAdaptor.fromBits _) (target - sample.request.result input)]
@@ -358,7 +358,7 @@ private theorem vectorMapOfFn {A B : Type} {count : Nat} (values : Fin count →
 private theorem rowMaskSampleGarble_split (rows : Coordinates.Rows)
     (sparse : FieldMacToECMac.SparseRow rows) (input : AffineInput) (sample : RowPublicSample) :
     rowMaskSampleGarble rows input (rowMaskSampleSplit rows input sample).2 =
-      sample.retargetMask input (FieldMacToECMac.evaluateRow rows input) := by
+      sample.retargetMask input (FieldMacToECMac.representedRow rows input) := by
   have hx : xMaskPolynomial rows.x.constant
       ![rows.x.x, rows.x.y, rows.x.xy, rows.x.ySquared] input =
       Coordinates.evaluate rows.x input := by
@@ -366,8 +366,9 @@ private theorem rowMaskSampleGarble_split (rows : Coordinates.Rows)
     ring
   have hy : yMaskPolynomial rows.y.constant
       ![rows.y.x, rows.y.xSquared, rows.y.ySquared] input =
-      Coordinates.evaluate rows.y input := by
-    simp [yMaskPolynomial, Coordinates.evaluate, sparse.2.1, sparse.2.2.1]
+      rows.y.constant + 3 * rows.y.ySquared + rows.y.x * input.x +
+        rows.y.xSquared * input.x ^ 2 + rows.y.ySquared * input.x ^ 3 := by
+    simp [yMaskPolynomial, cubicYParameters, Cubic.polynomial]
   have hz : zMaskPolynomial rows.z.constant
       ![rows.z.y, rows.z.xy, rows.z.xSquared, rows.z.ySquared] input =
       Coordinates.evaluate rows.z input := by
@@ -388,7 +389,7 @@ theorem circuitMaskSampleGarble_split (bridgeKey mask : BaseField)
     circuitMaskSampleGarble bridgeKey mask rows input
       (circuitMaskSampleSplit bridgeKey mask rows input sample).2 =
       sample.retargetMask input (bridgeKey + mask * (input.x ^ 3 + 3 - input.y ^ 2))
-        (FieldMacToECMac.evaluateRows rows input) := by
+        (FieldMacToECMac.representedRows rows input) := by
   change ({
     curve := curveMaskSampleGarble bridgeKey mask input
       (curveMaskSampleSplit bridgeKey mask input sample.curve).2,
@@ -398,13 +399,13 @@ theorem circuitMaskSampleGarble_split (bridgeKey mask : BaseField)
   have points : (Vector.ofFn fun index => rowMaskSampleGarble (rows.get index) input
       (rowMaskSampleSplit (rows.get index) input (sample.points.get index)).2) =
       Vector.ofFn (fun index => (sample.points.get index).retargetMask input
-        ((FieldMacToECMac.evaluateRows rows input).get index)) := by
+        ((FieldMacToECMac.representedRows rows input).get index)) := by
     apply congrArg Vector.ofFn
     funext index
     change rowMaskSampleGarble (rows.get index) input
       (rowMaskSampleSplit (rows.get index) input (sample.points.get index)).2 =
       (sample.points.get index).retargetMask input
-        ((Vector.ofFn fun output => FieldMacToECMac.evaluateRow (rows.get output) input).get index)
+        ((Vector.ofFn fun output => FieldMacToECMac.representedRow (rows.get output) input).get index)
     rw [Vector.get_ofFn]
     exact rowMaskSampleGarble_split (rows.get index) (sparse index) input _
   rw [points]
@@ -423,7 +424,7 @@ theorem circuitMaskGarble_eq_publicSampleRetarget (bridgeKey mask : BaseField)
     (PMF.uniformOfFintype CircuitMaskSample).map (circuitMaskSampleGarble bridgeKey mask rows input) =
       (PMF.uniformOfFintype PublicSample).map (fun sample =>
         sample.retargetMask input (bridgeKey + mask * (input.x ^ 3 + 3 - input.y ^ 2))
-          (FieldMacToECMac.evaluateRows rows input)) := by
+          (FieldMacToECMac.representedRows rows input)) := by
   let split := circuitMaskSampleSplit bridgeKey mask rows input
   have marginal : (PMF.uniformOfFintype PublicSample).map (fun sample => (split sample).2) =
       PMF.uniformOfFintype CircuitMaskSample := by
@@ -446,7 +447,7 @@ theorem circuitMaskGarble_eq_selectedRequests (bridgeKey mask : BaseField)
       (circuitMaskSampleGarble bridgeKey mask rows input)).map PublicSample.requests =
     (PMF.uniformOfFintype PublicSample).map (fun sample =>
       (sample.curveRequest.retarget input (bridgeKey + mask * (input.x ^ 3 + 3 - input.y ^ 2)),
-        retargetPointGateRequests sample.pointRequests input (FieldMacToECMac.evaluateRows rows input))) := by
+        retargetPointGateRequests sample.pointRequests input (FieldMacToECMac.representedRows rows input))) := by
   rw [circuitMaskGarble_eq_publicSampleRetarget bridgeKey mask rows sparse input, PMF.map_comp]
   apply congrArg ((PMF.uniformOfFintype PublicSample).map)
   funext sample
@@ -462,7 +463,7 @@ theorem outputKeyMaskGarble_eq_selectedRequests (bridgeKey mask : BaseField)
     (PMF.uniformOfFintype PublicSample).map (fun sample =>
       (sample.curveRequest.retarget input bridgeKey,
         retargetPointGateRequests sample.pointRequests input
-          (FieldMacToECMac.evaluateRows (FieldMacToECMac.rowsForOutputKeys keys randomness) input))) := by
+          (FieldMacToECMac.representedRows (FieldMacToECMac.rowsForOutputKeys keys randomness) input))) := by
   have curveTarget : bridgeKey + mask * (input.x ^ 3 + 3 - input.y ^ 2) = bridgeKey := by
     rw [show input.y ^ 2 = input.x ^ 3 + 3 from onCurve]
     simp

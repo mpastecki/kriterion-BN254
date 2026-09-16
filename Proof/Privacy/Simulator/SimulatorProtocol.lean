@@ -57,7 +57,7 @@ theorem invalidProgram_private_run (coin : OfflineCoin) (oracle : SimulatorState
   exact invalidProgram_run (privateState coin oracle) input
 
 /-- The online operation budget includes internal reads and all programming attempts. -/
-abbrev onlineBudget [FieldCertificate] (output : Option Point) : Nat := if output.isSome then 905765 else 3810
+abbrev onlineBudget [FieldCertificate] (output : Option Point) : Nat := if output.isSome then 836423 else 3810
 
 /-- This oracle program samples private online coins before it executes the selected path. -/
 noncomputable def encodeProgram [FieldCertificate] [GroupCertificate]
@@ -87,12 +87,12 @@ theorem encodeProgram_law [FieldCertificate] [GroupCertificate]
       rw [online_uniform]
       rfl
 
-/-- Each valid execution makes at most 905765 oracle calls. -/
+/-- Each valid execution makes at most 836423 oracle calls. -/
 theorem validProgram_call_bound [FieldCertificate] [GroupCertificate]
     (coin : OfflineCoin) (oracle : SimulatorState) (input : AffineInput)
     (output : Point) (free : Vector Point 90)
     (scales : Fin FieldMacToECMac.outputMacCount → NonZeroBase) :
-    ((validProgram (privateView coin) input output free scales).runCount handler oracle).2 ≤ 905765 :=
+    ((validProgram (privateView coin) input output free scales).runCount handler oracle).2 ≤ 836423 :=
   (Program.runCount_correct handler _ oracle).2
 
 /-- Each invalid execution makes at most 3810 oracle calls. -/

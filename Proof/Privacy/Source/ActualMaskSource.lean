@@ -31,16 +31,16 @@ theorem actualXMaskSample_table (row : Coordinates.Coefficients)
 /-- This sample extracts the actual Y masks and ciphertext rows. -/
 def actualYMaskSample (row : Coordinates.Coefficients) (randomness : Biquadratic.YRandomness)
     (oracles : Biquadratic.Oracles) (key : InputMacKey)
-    (quotients : Fin 4 → Fin coordinateBitCount → HashLiftQuotient) : YMaskSample :=
+    (quotients : Fin 3 → Fin coordinateBitCount → HashLiftQuotient) : YMaskSample :=
   let table := Biquadratic.garbleY row.constant row.x row.xSquared row.ySquared randomness oracles key
   let empty := Vector.replicate coordinateBitCount defaultBitAdaptorTable
   (yMaskSource randomness oracles key,
-    (![table.y8.getD empty, table.y10.getD empty, table.x7.getD empty, table.x9.getD empty], quotients))
+    (![table.y8.getD empty, table.x7.getD empty, table.x9.getD empty], quotients))
 
 /-- The extracted Y sample reconstructs the actual public table. -/
 theorem actualYMaskSample_table (row : Coordinates.Coefficients)
     (randomness : Biquadratic.YRandomness) (oracles : Biquadratic.Oracles) (key : InputMacKey)
-    (quotients : Fin 4 → Fin coordinateBitCount → HashLiftQuotient) (input : AffineInput) :
+    (quotients : Fin 3 → Fin coordinateBitCount → HashLiftQuotient) (input : AffineInput) :
     (yMaskSampleGarble row input (actualYMaskSample row randomness oracles key quotients)).request.table =
       Biquadratic.garbleY row.constant row.x row.xSquared row.ySquared randomness oracles key := by
   dsimp only [yMaskSampleGarble, actualYMaskSample, ySampleViewEquiv, Equiv.symm,
@@ -94,7 +94,7 @@ theorem actualCurveMaskSample_table (bridgeKey mask r1 r2 : BaseField)
 /-- These quotients retain one complete hash fiber for each bit adaptor. -/
 abbrev RowMaskQuotients :=
   (Fin 4 → Fin coordinateBitCount → HashLiftQuotient) ×
-  (Fin 4 → Fin coordinateBitCount → HashLiftQuotient) ×
+  (Fin 3 → Fin coordinateBitCount → HashLiftQuotient) ×
   (Fin 5 → Fin coordinateBitCount → HashLiftQuotient)
 
 abbrev CircuitMaskQuotients :=

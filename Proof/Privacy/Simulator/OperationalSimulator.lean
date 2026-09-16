@@ -50,7 +50,7 @@ def attachOracles (oracles : SimulatorOracleCoin) (coin : OfflineCoin) : Circuit
   (coinEquiv (coin, oracles)).state
 
 /-- This program samples only the private data of the offline simulator. -/
-def garble (oracles : SimulatorOracleCoin) : Code (Pipeline.Table × CircuitSimulatorState) 907550 :=
+def garble (oracles : SimulatorOracleCoin) : Code (Pipeline.Table × CircuitSimulatorState) 838208 :=
   offline.map fun coin =>
     let state := attachOracles oracles coin
     (state.table, state)

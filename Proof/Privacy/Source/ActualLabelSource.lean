@@ -10,6 +10,7 @@ noncomputable section
 def circuitBucketWire (bucket : RawLabelBucket) : EncPRF.PermutationIndex :=
   match bucket.1 with
   | .curve .x3 | .curve .x5 | .curve .x7 | .point _ .x7 | .point _ .x9 => (.x, bucket.2)
+  | .point .y .y8 => (.x, bucket.2)
   | .curve .y4 | .curve .y6 | .point _ .y6 | .point _ .y8 | .point _ .y10 => (.y, bucket.2)
 
 /-- The source labels retain both actual input keys. -/
@@ -160,7 +161,7 @@ theorem circuitBucketInputBit_wire (input : AffineInput) (bucket : RawLabelBucke
   rcases bucket with ⟨kind, position⟩
   cases kind with
   | curve adaptor => cases adaptor <;> rfl
-  | point coordinate adaptor => cases adaptor <;> rfl
+  | point coordinate adaptor => cases coordinate <;> cases adaptor <;> rfl
 
 set_option maxRecDepth 4096 in
 /-- The selected source labels equal the labels that the adversary receives. -/
@@ -174,7 +175,7 @@ theorem circuitSourceLabels_selected (curveKey pointKey : InputMacKey)
       simp [circuitSourceLabels, circuitBucketWire, circuitBucketInputBit, circuitBucketInputLabel,
         InputMacKey.encodeAffine, InputMacKey.encode, encodeCoordinate, BitInput.ofAffine,
         inputKeyLabel, coordinateValues, Vector.get_eq_getElem]
-  | point coordinate adaptor => cases adaptor <;>
+  | point coordinate adaptor => cases coordinate <;> cases adaptor <;>
       simp [circuitSourceLabels, circuitBucketWire, circuitBucketInputBit, circuitBucketInputLabel,
         InputMacKey.encodeAffine, InputMacKey.encode, encodeCoordinate, BitInput.ofAffine,
         inputKeyLabel, coordinateValues, Vector.get_eq_getElem]

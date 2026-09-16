@@ -59,7 +59,7 @@ theorem cutoffEnvelope_has100Bits (queries : Nat) :
     WorkPerAdvantage 100 (queries + 1) (adaptiveErrorEnvelope queries + cutoffResidual queries) := by
   have countBound : adaptiveConstantCount + adaptiveQueryCount * queries + (queries + 1) ≤
       (queries + 1) * 2 ^ 28 := by
-    change 246408450 + 824 * queries + (queries + 1) ≤ (queries + 1) * 268435456
+    change 227454970 + 824 * queries + (queries + 1) ≤ (queries + 1) * 268435456
     omega
   have castBound : ((adaptiveConstantCount + adaptiveQueryCount * queries + (queries + 1) : Nat) : ℝ) ≤
       ((queries + 1 : Nat) : ℝ) * 2 ^ 28 := by exact_mod_cast countBound

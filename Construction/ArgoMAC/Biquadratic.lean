@@ -1,5 +1,5 @@
 /-
-This file defines three sparse biquadratic tables.
+This file defines sparse coordinate tables. The Y row is cubic in x.
 -/
 
 import Construction.ArgoMAC.DigitAdaptor
@@ -98,18 +98,16 @@ def garbleX (c0 c1 c2 c3 c5 : BaseField) (randomness : XRandomness)
     y8 := some y8.1
     y10 := some y10.1 }
 
-/-- This is the four-adaptor RCB Y-coordinate table. -/
+/-- This table represents RCB Y as a cubic in x on the curve. -/
 def garbleY (c0 c1 c4 c5 : BaseField) (randomness : YRandomness)
     (oracles : Oracles) (inputKey : InputMacKey) : Table :=
-  let y8 := DigitAdaptor.garble oracles.y8 (-randomness.r5) inputKey.y
+  let y8 := DigitAdaptor.garble oracles.y8 (-randomness.r5) inputKey.x
   let r8 := DigitAdaptor.bitsK y8.2
-  let y10 := DigitAdaptor.garble oracles.y10 (-r8) inputKey.y
-  let r10 := DigitAdaptor.bitsK y10.2
-  let x7 := DigitAdaptor.garble oracles.x7 (-randomness.r4) inputKey.x
+  let x7 := DigitAdaptor.garble oracles.x7 (-(randomness.r4 + r8)) inputKey.x
   let r7 := DigitAdaptor.bitsK x7.2
   let x9 := DigitAdaptor.garble oracles.x9 (-(randomness.r1 + r7)) inputKey.x
   let r9 := DigitAdaptor.bitsK x9.2
-  { c0 := some (c0 - r10 - r9)
+  { c0 := some (c0 + 3 * c5 - r9)
     c1 := some (c1 + randomness.r1)
     c2 := none
     c3 := none
@@ -119,7 +117,16 @@ def garbleY (c0 c1 c4 c5 : BaseField) (randomness : YRandomness)
     x9 := some x9.1
     y6 := none
     y8 := some y8.1
-    y10 := some y10.1 }
+    y10 := none }
+
+/-- The historical y8 slot now holds the highest x adaptor for a Y row. -/
+def evaluateY (oracles : Oracles) (table : Table) (input : AffineInput)
+    (inputMac : InputMac) : BaseField :=
+  coefficient table.c0 + coefficient table.c1 * input.x +
+    coefficient table.c4 * input.x ^ 2 + coefficient table.c5 * input.x ^ 3 +
+    evaluateDigit oracles.y8 table.y8 input.x inputMac.x * input.x ^ 2 +
+    evaluateDigit oracles.x7 table.x7 input.x inputMac.x * input.x +
+    evaluateDigit oracles.x9 table.x9 input.x inputMac.x
 
 /-- This is the five-adaptor RCB Z-coordinate table. -/
 def garbleZ (c0 c2 c3 c4 c5 : BaseField) (randomness : ZRandomness)
@@ -169,14 +176,12 @@ theorem evaluateEncodedX (c0 c1 c2 c3 c5 : BaseField) (randomness : XRandomness)
 
 theorem evaluateEncodedY (c0 c1 c4 c5 : BaseField) (randomness : YRandomness)
     (oracles : Oracles) (inputKey : InputMacKey) (input : AffineInput) :
-    evaluate oracles (garbleY c0 c1 c4 c5 randomness oracles inputKey)
+    evaluateY oracles (garbleY c0 c1 c4 c5 randomness oracles inputKey)
         input (inputKey.encodeAffine input) =
-      c0 + c1 * input.x + c4 * input.x ^ 2 +
-        c5 * input.y ^ 2 := by
-  simp only [evaluate, garbleY, InputMacKey.encodeAffine, InputMacKey.encode,
-    BitInput.ofAffine, coefficient, evaluateDigitNone, Option.getD_some, Option.getD_none]
-  rw [evaluateDigitGarbleEncode, evaluateDigitGarbleEncode,
-    evaluateDigitGarbleEncode, evaluateDigitGarbleEncode]
+      c0 + 3 * c5 + c1 * input.x + c4 * input.x ^ 2 + c5 * input.x ^ 3 := by
+  simp only [evaluateY, garbleY, InputMacKey.encodeAffine, InputMacKey.encode,
+    BitInput.ofAffine, coefficient, Option.getD_some]
+  rw [evaluateDigitGarbleEncode, evaluateDigitGarbleEncode, evaluateDigitGarbleEncode]
   ring
 
 theorem evaluateEncodedZ (c0 c2 c3 c4 c5 : BaseField) (randomness : ZRandomness)

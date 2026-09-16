@@ -78,7 +78,7 @@ def maskRetainedTape [FieldCertificate] [GroupCertificate] (randomness : Garblin
 /-- This tape contains only the actual public ciphertext rows. -/
 abbrev CircuitMaskTables := (Fin 5 → Vector BitAdaptor.Table coordinateBitCount) ×
   (Fin outputMacCount → (Fin 4 → Vector BitAdaptor.Table coordinateBitCount) ×
-    (Fin 4 → Vector BitAdaptor.Table coordinateBitCount) ×
+    (Fin 3 → Vector BitAdaptor.Table coordinateBitCount) ×
     (Fin 5 → Vector BitAdaptor.Table coordinateBitCount))
 
 /-- This equivalence joins the field randomizers to their public tables. -/

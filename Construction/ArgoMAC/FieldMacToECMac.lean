@@ -19,7 +19,7 @@ structure HomogeneousValue where
   z : BaseField
 deriving DecidableEq
 
-/-- Each output MAC uses three biquadratic tables. -/
+/-- Each output MAC uses three coordinate tables. -/
 structure RowTable where
   x : Biquadratic.Table
   y : Biquadratic.Table
@@ -139,7 +139,7 @@ def evaluateHomogeneous (table : Table) (oracles : Oracles)
     (input : AffineInput) (inputMac : InputMac) : Vector HomogeneousValue outputMacCount :=
   Vector.ofFn fun index => {
     x := Biquadratic.evaluate (oracles.get index).x (table.x.get index) input inputMac
-    y := Biquadratic.evaluate (oracles.get index).y (table.y.get index) input inputMac
+    y := Biquadratic.evaluateY (oracles.get index).y (table.y.get index) input inputMac
     z := Biquadratic.evaluate (oracles.get index).z (table.z.get index) input inputMac
   }
 
@@ -163,6 +163,36 @@ def evaluateRow (rows : Coordinates.Rows) (input : AffineInput) : HomogeneousVal
 def evaluateRows (rows : Rows) (input : AffineInput) :
     Vector HomogeneousValue outputMacCount :=
   Vector.ofFn fun index => evaluateRow (rows.get index) input
+
+/-- These are the polynomial values represented by the actual tables for any input. -/
+def representedRow (rows : Coordinates.Rows) (input : AffineInput) : HomogeneousValue := {
+  x := Coordinates.evaluate rows.x input
+  y := rows.y.constant + 3 * rows.y.ySquared + rows.y.x * input.x +
+    rows.y.xSquared * input.x ^ 2 + rows.y.ySquared * input.x ^ 3
+  z := Coordinates.evaluate rows.z input
+}
+
+def representedRows (rows : Rows) (input : AffineInput) :
+    Vector HomogeneousValue outputMacCount := Vector.ofFn fun index => representedRow (rows.get index) input
+
+/-- Only this bridge uses curve membership; represented rows are defined for all inputs. -/
+theorem representedRow_onCurve (rows : Coordinates.Rows) (input : AffineInput)
+    (sparse : SparseRow rows) (onCurve : OnCurve input) :
+    representedRow rows input = evaluateRow rows input := by
+  have yIdentity : rows.y.constant + 3 * rows.y.ySquared + rows.y.x * input.x +
+      rows.y.xSquared * input.x ^ 2 + rows.y.ySquared * input.x ^ 3 =
+      Coordinates.evaluate rows.y input := by
+    simp only [Coordinates.evaluate, sparse.2.1, sparse.2.2.1, zero_mul, add_zero]
+    rw [onCurve]
+    ring
+  simp only [representedRow, evaluateRow, yIdentity]
+
+theorem representedRows_onCurve (rows : Rows) (input : AffineInput)
+    (sparse : ∀ index, SparseRow (rows.get index)) (onCurve : OnCurve input) :
+    representedRows rows input = evaluateRows rows input := by
+  apply congrArg (fun values : Fin outputMacCount → HomogeneousValue => Vector.ofFn values)
+  funext index
+  exact representedRow_onCurve (rows.get index) input (sparse index) onCurve
 
 theorem evaluateRowsNone (offset input : AffineInput) (randomizer : BaseField) :
     evaluateRow (Coordinates.rows offset none randomizer) input = {
@@ -198,12 +228,22 @@ def expectedResult (rows : Rows)
   pointMacs := evaluateRows rows input
 }
 
+def representedResult (rows : Rows) (input : AffineInput) : Result := {
+  point := input
+  pointMacs := representedRows rows input
+}
+
+theorem representedResult_onCurve (rows : Rows) (input : AffineInput)
+    (sparse : ∀ index, SparseRow (rows.get index)) (onCurve : OnCurve input) :
+    representedResult rows input = expectedResult rows input := by
+  simp only [representedResult, expectedResult, representedRows_onCurve rows input sparse onCurve]
+
 theorem evaluateHomogeneousEncoded (rows : Rows) (randomness : Randomness)
     (oracles : Oracles) (inputKey : InputMacKey) (input : AffineInput) :
     (∀ index, SparseRow (rows.get index)) →
     evaluateHomogeneous (garble rows randomness oracles inputKey) oracles
         input (inputKey.encodeAffine input) =
-      evaluateRows rows input := by
+      representedRows rows input := by
   intro sparse
   apply Vector.ext
   intro index inRange
@@ -213,7 +253,7 @@ theorem evaluateHomogeneousEncoded (rows : Rows) (randomness : Randomness)
     Vector.get_map, Vector.get_ofFn]
   rw [Biquadratic.evaluateEncodedX, Biquadratic.evaluateEncodedY,
     Biquadratic.evaluateEncodedZ]
-  simp [evaluateRows, evaluateRow, Coordinates.evaluate, xX2, yY, yXY, zX]
+  simp [representedRows, representedRow, Coordinates.evaluate, xX2, zX]
   ring_nf
   constructor <;> trivial
 
@@ -222,7 +262,7 @@ theorem evaluateEncoded
     (oracles : Oracles) (inputKey : InputMacKey) (input : AffineInput) :
     (∀ index, SparseRow (rows.get index)) →
     evaluate (garble rows randomness oracles inputKey) oracles
-        input (inputKey.encodeAffine input) = expectedResult rows input := by
+        input (inputKey.encodeAffine input) = representedResult rows input := by
   intro sparse
   rw [evaluate, evaluateHomogeneousEncoded rows randomness oracles inputKey input sparse]
   rfl

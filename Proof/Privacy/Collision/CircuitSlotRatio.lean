@@ -15,7 +15,7 @@ def circuitBucketSize (index : Pipeline.FixedKeyIndex) : Nat :=
   match index.kind with
   | .curve _ => 1
   | .point .x .x7 => 0
-  | .point .y .y6 => 0
+  | .point .y .y6 | .point .y .y10 => 0
   | .point _ _ => FieldMacToECMac.outputMacCount
 
 /-- This map lists exactly the actual gates in a fixed permutation bucket. -/
@@ -31,9 +31,9 @@ def circuitBucketGate : (index : Pipeline.FixedKeyIndex) → Fin (circuitBucketS
   | ⟨.point .x .x9, bit, _⟩, row => .inr (row, .inl (3, bit))
   | ⟨.point .x .x7, _, _⟩, row => Fin.elim0 row
   | ⟨.point .y .y8, bit, _⟩, row => .inr (row, .inr (.inl (0, bit)))
-  | ⟨.point .y .y10, bit, _⟩, row => .inr (row, .inr (.inl (1, bit)))
-  | ⟨.point .y .x7, bit, _⟩, row => .inr (row, .inr (.inl (2, bit)))
-  | ⟨.point .y .x9, bit, _⟩, row => .inr (row, .inr (.inl (3, bit)))
+  | ⟨.point .y .y10, _, _⟩, row => Fin.elim0 row
+  | ⟨.point .y .x7, bit, _⟩, row => .inr (row, .inr (.inl (1, bit)))
+  | ⟨.point .y .x9, bit, _⟩, row => .inr (row, .inr (.inl (2, bit)))
   | ⟨.point .y .y6, _, _⟩, row => Fin.elim0 row
   | ⟨.point .z .y6, bit, _⟩, row => .inr (row, .inr (.inr (0, bit)))
   | ⟨.point .z .y8, bit, _⟩, row => .inr (row, .inr (.inr (1, bit)))
@@ -122,7 +122,8 @@ theorem circuitCurveBucket_card (adaptor : Pipeline.CurveAdaptor)
 /-- Each used point permutation contains exactly 91 gate assignments. -/
 theorem circuitPointBucket_card (coordinate : Pipeline.PointCoordinate) (adaptor : Pipeline.PointAdaptor)
     (position : Fin coordinateBitCount) (slot : Pipeline.FixedKeySlot)
-    (used : (coordinate, adaptor) ≠ (.x, .x7) ∧ (coordinate, adaptor) ≠ (.y, .y6)) :
+    (used : (coordinate, adaptor) ≠ (.x, .x7) ∧ (coordinate, adaptor) ≠ (.y, .y6) ∧
+      (coordinate, adaptor) ≠ (.y, .y10)) :
     Fintype.card (RawBucketUse (circuitRawGatePrescription keys slopes lifts tables)
       ⟨.point coordinate adaptor, position, slot⟩) = 91 := by
   rw [circuitRawBucketUse_card]

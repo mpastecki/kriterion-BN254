@@ -14,7 +14,7 @@ attribute [local instance] bitAdaptorTableFintype publicVectorFintype circuitMas
 abbrev MaskHashRest (randomizers adaptors : Nat) :=
   (Fin randomizers → BaseField) × (Fin adaptors → Vector BitAdaptor.Table coordinateBitCount)
 
-abbrev RowHashRest := MaskHashRest 4 4 × MaskHashRest 3 4 × MaskHashRest 4 5
+abbrev RowHashRest := MaskHashRest 4 4 × MaskHashRest 3 3 × MaskHashRest 4 5
 abbrev CircuitHashRest := MaskHashRest 2 5 × (Fin FieldMacToECMac.outputMacCount → RowHashRest)
 
 local instance : Fintype RawCircuitGate := inferInstance
@@ -50,12 +50,12 @@ def circuitMaskHashSplitEquiv :
       | .inr (row, .inl (adaptor, bit)) =>
           (maskHashSplitEquiv 4 4 (source.2 row).1).1 adaptor bit
       | .inr (row, .inr (.inl (adaptor, bit))) =>
-          (maskHashSplitEquiv 3 4 (source.2 row).2.1).1 adaptor bit
+          (maskHashSplitEquiv 3 3 (source.2 row).2.1).1 adaptor bit
       | .inr (row, .inr (.inr (adaptor, bit))) =>
           (maskHashSplitEquiv 4 5 (source.2 row).2.2).1 adaptor bit),
     (maskHashSplitEquiv 2 5 source.1).2,
     fun row => ((maskHashSplitEquiv 4 4 (source.2 row).1).2,
-      (maskHashSplitEquiv 3 4 (source.2 row).2.1).2,
+      (maskHashSplitEquiv 3 3 (source.2 row).2.1).2,
       (maskHashSplitEquiv 4 5 (source.2 row).2.2).2))
   invFun split := (
     (maskHashSplitEquiv 2 5).symm
@@ -63,7 +63,7 @@ def circuitMaskHashSplitEquiv :
     fun row => (
       (maskHashSplitEquiv 4 4).symm
         ((fun adaptor bit => split.1 (.inr (row, .inl (adaptor, bit)))), (split.2.2 row).1),
-      (maskHashSplitEquiv 3 4).symm
+      (maskHashSplitEquiv 3 3).symm
         ((fun adaptor bit => split.1 (.inr (row, .inr (.inl (adaptor, bit))))), (split.2.2 row).2.1),
       (maskHashSplitEquiv 4 5).symm
         ((fun adaptor bit => split.1 (.inr (row, .inr (.inr (adaptor, bit))))), (split.2.2 row).2.2)))
@@ -103,7 +103,7 @@ theorem circuitHash_observation_bound {Observation : Type*}
       observe).toOuterMeasure event).toReal -
       (((PMF.uniformOfFintype CircuitMaskSample).bind
         (observe ∘ circuitGoodHashSource)).toOuterMeasure event).toReal| ≤
-      (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384 := by
+      (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384 := by
   have source : (PMF.uniformOfFintype CircuitMaskSample).bind (observe ∘ circuitGoodHashSource) =
       (PMF.uniformOfFintype ((RawCircuitGate → BaseField × HashLiftQuotient) × CircuitHashRest)).bind
         (fun pair => observe ((fun gate => goodHashLiftSource (pair.1 gate)), pair.2)) := by
@@ -111,7 +111,7 @@ theorem circuitHash_observation_bound {Observation : Type*}
     rfl
   rw [source]
   have bound := hashLift_family_product_observation_bound observe event
-  have count : (Fintype.card RawCircuitGate : ℝ) = 301752 := by
+  have count : (Fintype.card RawCircuitGate : ℝ) = 278638 := by
     exact_mod_cast rawCircuitGate_card
   rwa [count] at bound
 

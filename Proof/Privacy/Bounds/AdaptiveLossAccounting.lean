@@ -28,9 +28,9 @@ theorem invalidRelativeLoss_product (queries : Nat) :
 
 /-- The source flags, relative factors, and hidden-key exclusions fit the current envelope. -/
 theorem invalidCombinedLoss_le_envelope (before queries : Nat) (beforeLe : before ≤ queries) :
-    ((243390420 : ℝ) / 2 ^ 128 + 182 * before / 2 ^ 128) +
+    ((224668080 : ℝ) / 2 ^ 128 + 182 * before / 2 ^ 128) +
       ((186 * queries + 508) / 2 ^ 128 + (queries + 1) / (baseFieldModulus : ℝ)) +
-      2 * (301752 * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384) + (2 : ℝ) ^ (-240 : ℤ) ≤
+      2 * (278638 * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384) + (2 : ℝ) ^ (-240 : ℤ) ≤
         adaptiveErrorEnvelope queries := by
   have bound := adaptiveLossSum_le_envelope before queries beforeLe
   convert bound using 1

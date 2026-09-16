@@ -15,7 +15,7 @@ set_option maxHeartbeats 1000000
 attribute [local irreducible] SimulatorRejectionCost.PositiveWidths
 
 /-- The total setup constructs each sampled array, private cache, and public table once. -/
-def setupCode : Code ((PrivateCache × Pipeline.Table) × Nat) 907550 :=
+def setupCode : Code ((PrivateCache × Pipeline.Table) × Nat) 838208 :=
   SimulatorSamplingCost.offlineWithCost.map fun sampled =>
     let prepared := readyWithCost sampled.1
     (prepared.1, sampled.2 + prepared.2)
@@ -49,7 +49,7 @@ theorem setup_work {Seed : Type}
 
 theorem setup_bits {Seed : Type}
     (random : (width : Nat) → Seed → Fin (2 ^ width) × Seed) (attempts : Nat) (seed : Seed) :
-    ((setup attempts).run random seed).2 ≤ 907550 * (257 * attempts) :=
+    ((setup attempts).run random seed).2 ≤ 838208 * (257 * attempts) :=
   Code.total_bits random attempts setupCode setupCode_size seed
 
 /-- This total encoder continues the sparse oracle after every fallback draw. -/
@@ -94,14 +94,14 @@ theorem encode_bits [FieldCertificate] [GroupCertificate] {Seed : Type}
     (random : (width : Nat) → Seed → Fin (2 ^ width) × Seed)
     (attempts : Nat) (cache : PrivateCache) (input : AffineInput)
     (output : Option Point) (state : SparseState) (seed : Seed) :
-    ((encode attempts cache input output state).run random seed).2 ≤ 905946 * (257 * attempts) := by
+    ((encode attempts cache input output state).run random seed).2 ≤ 836604 * (257 * attempts) := by
   have first := Code.total_bits random attempts SimulatorSamplingCost.onlineWithCost
     SimulatorSamplingCost.online_size seed
   have second := Program.total_bits sparseDraw sparseDraw_sizeLe random attempts
     (selected cache.coin cache.tables input output
       ((SimulatorSamplingCost.onlineWithCost.total attempts).run random seed).1.1.1) state
     ((SimulatorSamplingCost.onlineWithCost.total attempts).run random seed).1.2
-  have budget : onlineBudget output ≤ 905765 := by cases output <;> simp [onlineBudget]
+  have budget : onlineBudget output ≤ 836423 := by cases output <;> simp [onlineBudget]
   have combined := Nat.add_le_add first (second.trans (Nat.mul_le_mul_right _ budget))
   simpa only [encode, BitCode.bind_run, BitCode.run, Nat.add_zero, ← Nat.add_mul] using combined
 
@@ -109,7 +109,7 @@ theorem labels_bits [FieldCertificate] [GroupCertificate] {Seed : Type}
     (random : (width : Nat) → Seed → Fin (2 ^ width) × Seed)
     (attempts : Nat) (cache : PrivateCache) (input : AffineInput)
     (output : Option Point) (state : SparseState) (seed : Seed) :
-    ((labels attempts cache input output state).run random seed).2 ≤ 905946 * (257 * attempts) := by
+    ((labels attempts cache input output state).run random seed).2 ≤ 836604 * (257 * attempts) := by
   simpa only [labels, BitCode.bind_run, BitCode.run, Nat.add_zero] using
     encode_bits random attempts cache input output state seed
 
@@ -162,7 +162,7 @@ theorem internal_total {A : Type} {budget : Nat}
 /-- This program retains the local counter and uses one fixed private query budget. -/
 def countedProgram [FieldCertificate] [GroupCertificate]
     (cache : PrivateCache) (input : AffineInput) (output : Option Point)
-    (sample : SimulatorSamplingCost.OnlineCoin) : Program combinedSpec (Garbling.Labels × Nat) 905765 :=
+    (sample : SimulatorSamplingCost.OnlineCoin) : Program combinedSpec (Garbling.Labels × Nat) 836423 :=
   .weaken (selected cache.coin cache.tables input output sample).internal
     (by cases output <;> simp [onlineBudget])
 
@@ -229,12 +229,12 @@ theorem execute_resources [FieldCertificate] [GroupCertificate] {Seed : Type}
     (attempts : Nat) (cache : PrivateCache) (input : AffineInput) (output : Option Point)
     (state : SparseState) (seed : Seed) (depth capacity : Nat)
     (bound : Cost.StateBound state capacity) (depthBound : depth ≤ capacity) :
-    (execute random attempts cache input output state seed depth).2.1 ≤ 905765 ∧
+    (execute random attempts cache input output state seed depth).2.1 ≤ 836423 ∧
     (execute random attempts cache input output state seed depth).2.2.1 ≤
-      51183699 + 905765 * (10 * (capacity + 905765) + 16) ∧
-    (execute random attempts cache input output state seed depth).2.2.2 ≤ 905946 * (257 * attempts) ∧
+      51183699 + 836423 * (10 * (capacity + 836423) + 16) ∧
+    (execute random attempts cache input output state seed depth).2.2.2 ≤ 836604 * (257 * attempts) ∧
     Nonempty (Cost.StateBound (execute random attempts cache input output state seed depth).1.2.1
-      (capacity + 905765)) := by
+      (capacity + 836423)) := by
   have resources := Cost.executeTotalCost_resources random attempts
     (countedProgram cache input output
       ((SimulatorSamplingCost.onlineWithCost.total attempts).run random seed).1.1.1) state
@@ -257,7 +257,7 @@ noncomputable section
 
 /-- The total setup retains the exact cached private-state distribution. -/
 theorem setup_law (attempts : Nat) :
-    TotalLaw attempts 907550 offlineReady.law ((setup attempts).law.map Prod.fst) := by
+    TotalLaw attempts 838208 offlineReady.law ((setup attempts).law.map Prod.fst) := by
   rw [← setupCode_law]
   exact (Code.total_law attempts setupCode).map Prod.fst
 
@@ -265,14 +265,14 @@ theorem setup_law (attempts : Nat) :
 theorem labels_law [FieldCertificate] [GroupCertificate]
     (attempts : Nat) (cache : PrivateCache) (input : AffineInput)
     (output : Option Point) (state : SparseState) :
-    TotalLaw attempts 905946
+    TotalLaw attempts 836604
       (runSampled sparseHandler (encoding cache.coin cache.tables input output) state)
       (labels attempts cache input output state).law := by
   have base := (Code.total_law attempts SimulatorSamplingCost.onlineWithCost).bind
     (fun sample => (Program.total_law sparseDraw attempts
       (selected cache.coin cache.tables input output sample.1) state).map
         (fun result => (result.1.1, result.2)))
-  have budget : 181 + onlineBudget output ≤ 905946 := by cases output <;> simp [onlineBudget]
+  have budget : 181 + onlineBudget output ≤ 836604 := by cases output <;> simp [onlineBudget]
   have law := base.weaken budget
   have reference : SimulatorSamplingCost.onlineWithCost.law.bind
       (fun sample => ((selected cache.coin cache.tables input output sample.1).sampledLaw sparseDraw state).map
@@ -305,7 +305,7 @@ def continuation [FieldCertificate] [GroupCertificate] {Aux : Type}
         ((Garbling.garbledCircuit construction).function scalar selectedInput.1.1) selectedInput.2).law.bind
         fun encoded => (external attempts
           (adversary.decide parameter table encoded.1 auxiliary selectedInput.1.2) encoded.2
-          (adversary.preQueryBudget parameter + adversary.inputQueryBudget parameter + 905765)).map Prod.fst
+          (adversary.preQueryBudget parameter + adversary.inputQueryBudget parameter + 836423)).map Prod.fst
 
 /-- The complete three-phase continuation retains the exact simulator's common mass. -/
 theorem continuation_law [FieldCertificate] [GroupCertificate] {Aux : Type}
@@ -314,7 +314,7 @@ theorem continuation_law [FieldCertificate] [GroupCertificate] {Aux : Type}
     (state : SparseState) :
     TotalLaw attempts
       (adversary.preQueryBudget parameter + adversary.inputQueryBudget parameter +
-        adversary.decisionQueryBudget parameter + 905946)
+        adversary.decisionQueryBudget parameter + 836604)
       (Implementation.continuation adversary parameter scalar auxiliary cache table state)
       (continuation attempts adversary parameter scalar auxiliary cache table state) := by
   have law := (ExternalBits.runTotalWithResources_totalLaw attempts
@@ -326,7 +326,7 @@ theorem continuation_law [FieldCertificate] [GroupCertificate] {Aux : Type}
           ((Garbling.garbledCircuit construction).function scalar selectedInput.1.1) selectedInput.2).bind
           fun encoded => (ExternalBits.runTotalWithResources_totalLaw attempts
             (adversary.decide parameter table encoded.1 auxiliary selectedInput.1.2) encoded.2
-            (adversary.preQueryBudget parameter + adversary.inputQueryBudget parameter + 905765)).map Prod.fst
+            (adversary.preQueryBudget parameter + adversary.inputQueryBudget parameter + 836423)).map Prod.fst
   simpa only [Implementation.continuation, continuation, external,
     Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using law
 
@@ -402,7 +402,7 @@ theorem resources [FieldCertificate] [GroupCertificate] {Aux Seed : Type}
     let cache := prepared.1.1.1.1
     let table := prepared.1.1.1.2
     let n := adversary.preQueryBudget parameter + adversary.inputQueryBudget parameter +
-      905765 + adversary.decisionQueryBudget parameter
+      836423 + adversary.decisionQueryBudget parameter
     let draws := 907731 + n
     let bits := draws * (257 * 256)
     ∀ before : (adversary.Before × SparseState) × Nat × Nat,
@@ -418,7 +418,7 @@ theorem resources [FieldCertificate] [GroupCertificate] {Aux Seed : Type}
     ∀ decided : (Bool × SparseState) × Nat × Nat,
       decided ∈ (ExternalBits.runTotalWithResources 256
         (adversary.decide parameter table encoded.1.1 auxiliary chosen.1.1.2) encoded.1.2.1
-        (adversary.preQueryBudget parameter + adversary.inputQueryBudget parameter + 905765)).support →
+        (adversary.preQueryBudget parameter + adversary.inputQueryBudget parameter + 836423)).support →
       prepared.1.1.2 + before.2.1 + chosen.2.1 + encoded.2.2.1 + decided.2.1 ≤
         53997367 + n * (10 * n + 16) ∧
       prepared.2 + before.2.2 + chosen.2.2 + encoded.2.2.2 + decided.2.2 ≤ bits ∧

@@ -154,26 +154,29 @@ theorem xResultExpr_bound (request : BiquadraticXRequest) (input : AffineInput)
 /-- This expression expands every operation in the y request result. -/
 def yResultExpr (request : BiquadraticYRequest) (input : AffineInput)
     (y8 : TableView request.y8Targets)
-    (y10 : TableView request.y10Targets)
     (x7 : TableView request.x7Targets)
     (x9 : TableView request.x9Targets) : FieldExpr :=
-  (.add (.add (.add (.add (.add (.add (.add (.input request.c0) (.mul (.input request.c1) (.input input.x))) (.mul (.input request.c4) (.mul (.input input.x) (.input input.x)))) (.mul (.input request.c5) (.mul (.input input.y) (.input input.y)))) (.mul (.bits x7.data) (.input input.x))) (.mul (.bits y8.data) (.input input.y))) (.bits x9.data)) (.bits y10.data))
+  let x := FieldExpr.input input.x
+  let square := FieldExpr.mul x x
+  let cube := FieldExpr.mul square x
+  .add (.add (.add (.add (.add (.add (.input request.c0)
+    (.mul (.input request.c1) x)) (.mul (.input request.c4) square))
+    (.mul (.input request.c5) cube)) (.mul (.bits x7.data) x))
+    (.mul (.bits y8.data) square)) (.bits x9.data)
 
 theorem yResultExpr_value (request : BiquadraticYRequest) (input : AffineInput)
     (y8 : TableView request.y8Targets)
-    (y10 : TableView request.y10Targets)
     (x7 : TableView request.x7Targets)
     (x9 : TableView request.x9Targets) :
-    (yResultExpr request input y8 y10 x7 x9).run.1 = request.result input := by
+    (yResultExpr request input y8 x7 x9).run.1 = request.result input := by
   simp only [yResultExpr, FieldExpr.run, arrayBitsWithCost_value,
-    y8.get_eq, y10.get_eq, x7.get_eq, x9.get_eq, BiquadraticYRequest.result, pow_succ, pow_zero, one_mul]
+    y8.get_eq, x7.get_eq, x9.get_eq, BiquadraticYRequest.result, pow_succ, pow_zero, one_mul]
 
 theorem yResultExpr_bound (request : BiquadraticYRequest) (input : AffineInput)
     (y8 : TableView request.y8Targets)
-    (y10 : TableView request.y10Targets)
     (x7 : TableView request.x7Targets)
     (x9 : TableView request.x9Targets) :
-    (yResultExpr request input y8 y10 x7 x9).run.2 ≤ 5200 := by
+    (yResultExpr request input y8 x7 x9).run.2 ≤ 5200 := by
   rw [FieldExpr.run_work]
   simp only [yResultExpr, FieldExpr.work, coordinateBitCount]
   decide
@@ -481,7 +484,6 @@ theorem xScheduleWithCost_count (request : BiquadraticXRequest) (output : Fin Fi
 /-- These arrays supply every gate in the y schedule. -/
 structure YScheduleTables (request : BiquadraticYRequest) where
   y8 : GateInputs request.y8Targets request.y8Quotients request.y8Lifts
-  y10 : GateInputs request.y10Targets request.y10Quotients request.y10Lifts
   x7 : GateInputs request.x7Targets request.x7Quotients request.x7Lifts
   x9 : GateInputs request.x9Targets request.x9Quotients request.x9Lifts
 
@@ -489,7 +491,7 @@ def yScheduleWithCost (request : BiquadraticYRequest) (output : Fin FieldMacToEC
     (input : AffineInput) (inputMac : InputMac) (tables : YScheduleTables request) :
     List GateDirective × Nat :=
   flattenWithCost [
-    digitScheduleWithCost (.point output .y .y8) request.y8Table input.y inputMac.y tables.y8, digitScheduleWithCost (.point output .y .y10) request.y10Table input.y inputMac.y tables.y10, digitScheduleWithCost (.point output .y .x7) request.x7Table input.x inputMac.x tables.x7, digitScheduleWithCost (.point output .y .x9) request.x9Table input.x inputMac.x tables.x9]
+    digitScheduleWithCost (.point output .y .y8) request.y8Table input.x inputMac.x tables.y8, digitScheduleWithCost (.point output .y .x7) request.x7Table input.x inputMac.x tables.x7, digitScheduleWithCost (.point output .y .x9) request.x9Table input.x inputMac.x tables.x9]
 
 theorem yScheduleWithCost_value (request : BiquadraticYRequest) (output : Fin FieldMacToECMac.outputMacCount)
     (input : AffineInput) (inputMac : InputMac) (tables : YScheduleTables request) :
@@ -501,7 +503,7 @@ theorem yScheduleWithCost_value (request : BiquadraticYRequest) (output : Fin Fi
 
 theorem yScheduleWithCost_count (request : BiquadraticYRequest) (output : Fin FieldMacToECMac.outputMacCount)
     (input : AffineInput) (inputMac : InputMac) (tables : YScheduleTables request) :
-    (yScheduleWithCost request output input inputMac tables).2 = 23376 := by
+    (yScheduleWithCost request output input inputMac tables).2 = 17532 := by
   simp only [yScheduleWithCost, flattenWithCost_count, List.map_cons, List.map_nil,
     List.sum_cons, List.sum_nil, List.length_cons, List.length_nil,
     digitScheduleWithCost_count, digitScheduleWithCost_value, digitGateSchedule_length,
@@ -565,7 +567,7 @@ theorem rowScheduleWithCost_value (request : BiquadraticRowRequest)
 theorem rowScheduleWithCost_count (request : BiquadraticRowRequest)
     (output : Fin FieldMacToECMac.outputMacCount) (input : AffineInput) (inputMac : InputMac)
     (tables : RowScheduleTables request) :
-    (rowScheduleWithCost request output input inputMac tables).2 = 82582 := by
+    (rowScheduleWithCost request output input inputMac tables).2 = 76230 := by
   simp only [rowScheduleWithCost, flattenWithCost_count, List.map_cons, List.map_nil,
     List.sum_cons, List.sum_nil, List.length_cons, List.length_nil,
     xScheduleWithCost_count, yScheduleWithCost_count, zScheduleWithCost_count,
@@ -664,11 +666,10 @@ structure PreparedY where
 def prepareYWithCost (request : BiquadraticYRequest) (input : AffineInput)
     (target : BaseField) (tables : YScheduleTables request) : PreparedY × Nat :=
   let data := retargetDataWithCost tables.x9.targets.data tables.x9.quotients.data target
-    (yResultExpr request input tables.y8.targets tables.y10.targets tables.x7.targets tables.x9.targets)
+    (yResultExpr request input tables.y8.targets tables.x7.targets tables.x9.targets)
   let updated := { request with x9Targets := data.targets.get, x9Lifts := data.lifts.get }
   let views : YScheduleTables updated := {
     y8 := tables.y8
-    y10 := tables.y10
     x7 := tables.x7
     x9 := {
       targets := TableView.ofVector data.targets
@@ -692,7 +693,7 @@ theorem prepareYWithCost_value (request : BiquadraticYRequest) (input : AffineIn
 theorem prepareYWithCost_bound (request : BiquadraticYRequest) (input : AffineInput)
     (target : BaseField) (tables : YScheduleTables request) :
     (prepareYWithCost request input target tables).2 ≤ 11500 := by
-  have bound := yResultExpr_bound request input tables.y8.targets tables.y10.targets tables.x7.targets tables.x9.targets
+  have bound := yResultExpr_bound request input tables.y8.targets tables.x7.targets tables.x9.targets
   rw [FieldExpr.run_work] at bound
   simp only [prepareYWithCost, retargetDataWithCost_bound]
   omega
@@ -885,7 +886,7 @@ theorem Prepared.pointScheduleWithCost_value (prepared : Prepared)
 
 theorem Prepared.pointScheduleWithCost_count (prepared : Prepared)
     (input : AffineInput) (inputMac : InputMac) :
-    (prepared.pointScheduleWithCost input inputMac).2 = 8116290 := by
+    (prepared.pointScheduleWithCost input inputMac).2 = 7492030 := by
   simp only [Prepared.pointScheduleWithCost, flattenWithCost_count, List.map_ofFn,
     Function.comp_def, rowScheduleWithCost_count, rowScheduleWithCost_value,
     BiquadraticRowRequest.schedule_length, List.length_ofFn]
@@ -908,7 +909,7 @@ theorem Prepared.scheduleWithCost_value (prepared : Prepared) (input : AffineInp
 
 theorem Prepared.scheduleWithCost_count (prepared : Prepared) (input : AffineInput)
     (originalMac linkedMac : InputMac) :
-    (prepared.scheduleWithCost input originalMac linkedMac).2 = 8749018 := by
+    (prepared.scheduleWithCost input originalMac linkedMac).2 = 8078530 := by
   simp only [Prepared.scheduleWithCost, flattenWithCost_count, List.map_cons, List.map_nil,
     List.sum_cons, List.sum_nil, List.length_cons, List.length_nil,
     curveScheduleWithCost_count, Prepared.pointScheduleWithCost_count,
@@ -964,23 +965,19 @@ def xArrayTables (arrays : GateArrays 5 4) :
     canonical := fun _ => rfl }
 
 /-- These views use the vectors that the gate sampler constructs. -/
-def yArrayTables (arrays : GateArrays 4 4) :
-    YScheduleTables ((yEquiv (gateArraysEquiv 4 4 arrays)).request) where
+def yArrayTables (arrays : GateArrays 4 3) :
+    YScheduleTables ((yEquiv (gateArraysEquiv 4 3 arrays)).request) where
   y8 := {
     targets := ⟨arrays.2.2.2.get 0, rfl⟩
     quotients := ⟨arrays.2.2.1.get 0, rfl⟩
     canonical := fun _ => rfl }
-  y10 := {
+  x7 := {
     targets := ⟨arrays.2.2.2.get 1, rfl⟩
     quotients := ⟨arrays.2.2.1.get 1, rfl⟩
     canonical := fun _ => rfl }
-  x7 := {
+  x9 := {
     targets := ⟨arrays.2.2.2.get 2, rfl⟩
     quotients := ⟨arrays.2.2.1.get 2, rfl⟩
-    canonical := fun _ => rfl }
-  x9 := {
-    targets := ⟨arrays.2.2.2.get 3, rfl⟩
-    quotients := ⟨arrays.2.2.1.get 3, rfl⟩
     canonical := fun _ => rfl }
 
 /-- These views use the vectors that the gate sampler constructs. -/
@@ -1008,11 +1005,11 @@ def zArrayTables (arrays : GateArrays 5 5) :
     canonical := fun _ => rfl }
 
 /-- This sample retains the backing arrays for one point row. -/
-abbrev RowArrays := GateArrays 5 4 × (GateArrays 4 4 × GateArrays 5 5)
+abbrev RowArrays := GateArrays 5 4 × (GateArrays 4 3 × GateArrays 5 5)
 
 def rowArraysEquiv : RowArrays ≃ RowPublicSample :=
   (Equiv.prodCongr ((gateArraysEquiv 5 4).trans xEquiv)
-    (Equiv.prodCongr ((gateArraysEquiv 4 4).trans yEquiv)
+    (Equiv.prodCongr ((gateArraysEquiv 4 3).trans yEquiv)
       ((gateArraysEquiv 5 5).trans zEquiv))).trans rowEquiv
 
 def RowArrays.prepared (arrays : RowArrays) : PreparedRow :=
@@ -1059,13 +1056,13 @@ def OfflineArrays.tables (arrays : OfflineArrays) (oracle : SimulatorState) :
     rw [Vector.map_map]
     rfl
 
-def rowArrays : Code RowArrays 9920 :=
-  (gateArrays 5 4).pair ((gateArrays 4 4).pair (gateArrays 5 5))
+def rowArrays : Code RowArrays 9158 :=
+  (gateArrays 5 4).pair ((gateArrays 4 3).pair (gateArrays 5 5))
 
-def publicArrays : Code PublicArrays 906533 :=
+def publicArrays : Code PublicArrays 837191 :=
   (gateArrays 3 5).pair (rowArrays.vector FieldMacToECMac.outputMacCount)
 
-def offlineArrays : Code OfflineArrays 907550 := publicArrays.pair (inputKey.pair field)
+def offlineArrays : Code OfflineArrays 838208 := publicArrays.pair (inputKey.pair field)
 
 attribute [local instance] publicVectorFintype bitAdaptorTableFintype publicBitAdaptorKeyFintype
   publicInputMacKeyFintype
@@ -1075,7 +1072,7 @@ local instance : Nonempty InputMacKey := ⟨defaultSimulatorCoin.inputKey⟩
 
 theorem rowArrays_uniform : Uniform rowArrays :=
   uniform_pair (gateArrays_uniform 5 4)
-    (uniform_pair (gateArrays_uniform 4 4) (gateArrays_uniform 5 5))
+    (uniform_pair (gateArrays_uniform 4 3) (gateArrays_uniform 5 5))
 
 theorem publicArrays_uniform : Uniform publicArrays :=
   uniform_pair (gateArrays_uniform 3 5)
@@ -1106,7 +1103,7 @@ def curveArrayPreparedWithCost (arrays : GateArrays 3 5) : PreparedCurve × Nat 
 
 /-- This computation constructs three request records and their direct array views. -/
 def rowArrayPreparedWithCost (arrays : RowArrays) : PreparedRow × Nat :=
-  (arrays.prepared, gateArrayViewWork 5 4 + gateArrayViewWork 4 4 + gateArrayViewWork 5 5 + 12)
+  (arrays.prepared, gateArrayViewWork 5 4 + gateArrayViewWork 4 3 + gateArrayViewWork 5 5 + 12)
 
 /-- This record stores the original state and its materialized request views. -/
 structure OfflinePrepared where
@@ -1139,7 +1136,7 @@ theorem prepareOfflineWithCost_value (arrays : OfflineArrays) (oracle : Simulato
   rfl
 
 theorem prepareOfflineWithCost_count (arrays : OfflineArrays) (oracle : SimulatorState) :
-    (prepareOfflineWithCost arrays oracle).2 = 59760 := by
+    (prepareOfflineWithCost arrays oracle).2 = 56848 := by
   simp only [prepareOfflineWithCost, curveArrayPreparedWithCost, rowArrayPreparedWithCost,
     gateArrayViewWork, Vector.toList_map, List.map_map, Function.comp_def]
   rw [List.map_const', List.sum_replicate_nat]

@@ -14,7 +14,7 @@ noncomputable section
 /-- This index lists the five curve adaptors and all 91 rows of point adaptors. -/
 abbrev RawCircuitGate := (Fin 5 × Fin coordinateBitCount) ⊕
   (Fin FieldMacToECMac.outputMacCount ×
-    ((Fin 4 × Fin coordinateBitCount) ⊕ (Fin 4 × Fin coordinateBitCount) ⊕
+    ((Fin 4 × Fin coordinateBitCount) ⊕ (Fin 3 × Fin coordinateBitCount) ⊕
       (Fin 5 × Fin coordinateBitCount)))
 
 /-- This map uses the actual adaptor order of the mask source. -/
@@ -23,7 +23,7 @@ def rawCircuitLocation : RawCircuitGate → Pipeline.FixedKeyLocation
   | .inr (output, .inl (adaptor, _)) =>
       .point output .x (![.y6, .y8, .y10, .x9] adaptor)
   | .inr (output, .inr (.inl (adaptor, _))) =>
-      .point output .y (![.y8, .y10, .x7, .x9] adaptor)
+      .point output .y (![.y8, .x7, .x9] adaptor)
   | .inr (output, .inr (.inr (adaptor, _))) =>
       .point output .z (![.y6, .y8, .y10, .x7, .x9] adaptor)
 
@@ -33,7 +33,7 @@ def rawCircuitWindow : RawCircuitGate → Nat
   | .inr (_, .inr (.inl (_, position))) => position.val
   | .inr (_, .inr (.inr (_, position))) => position.val
 
-theorem rawCircuitGate_card : Fintype.card RawCircuitGate = 301752 := by
+theorem rawCircuitGate_card : Fintype.card RawCircuitGate = 278638 := by
   simp [RawCircuitGate, coordinateBitCount, FieldMacToECMac.outputMacCount]
 
 /-- This prescription fixes one actual bit-adaptor hash lift and public table. -/
