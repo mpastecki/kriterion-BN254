@@ -20,7 +20,7 @@ def solution : Kriterion.Solution := {
   EncodingKey := Garbling.EncodingKey
   State := Shared.Simulator.State
   encoding := Wire.encoding
-  ciphertextBytes := 9806076
+  ciphertextBytes := 9803316
   evaluationOracle := Shared.evaluationOracle
   oracleUniform := by
     convert Shared.oracleUniform (Shared.Randomness.ofLegacy (Seed.randomness 0)) using 1

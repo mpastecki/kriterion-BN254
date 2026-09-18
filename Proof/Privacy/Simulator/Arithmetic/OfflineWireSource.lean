@@ -87,13 +87,13 @@ theorem offlineMemory_wire [FieldCertificate] (attempts : Nat) (base : Memory)
 theorem offlineMemory_public [FieldCertificate] (attempts : Nat) (base : Memory)
     (pointer : base.registers 11 = base.registers 10) (empty : base.bits 3 = []) :
     (samplerBatchMemory offlinePlan attempts 917470 0 base).map
-      (fun result => publicValue Wire.encoding 9806076 ((executeLinear publicWireProgram result.1).bits 3)) =
+      (fun result => publicValue Wire.encoding 9803316 ((executeLinear publicWireProgram result.1).bits 3)) =
       (SimulatorSampling.offline.total attempts).law.map (fun coin => some (publicSourceTable coin.1)) := by
-  have mapped := congrArg (PMF.map (publicValue Wire.encoding 9806076)) (offlineMemory_wire attempts base pointer empty)
+  have mapped := congrArg (PMF.map (publicValue Wire.encoding 9803316)) (offlineMemory_wire attempts base pointer empty)
   simp only [PMF.map_comp, Function.comp_def] at mapped
   refine mapped.trans ?_
   apply congrArg (fun transform => (SimulatorSampling.offline.total attempts).law.map transform)
   funext coin
-  exact publicValue_bytes Wire.encoding (publicSourceTable coin.1) 9806076 (publicSourceTable_length coin.1)
+  exact publicValue_bytes Wire.encoding (publicSourceTable coin.1) 9803316 (publicSourceTable_length coin.1)
 
 end Kriterion.ArgoMAC.ArithmeticSimulator

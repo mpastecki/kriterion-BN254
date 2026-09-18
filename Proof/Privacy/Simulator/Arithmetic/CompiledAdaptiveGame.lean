@@ -29,7 +29,7 @@ theorem compiledAdaptiveDecision_machine [FieldCertificate] [GroupCertificate] {
     (parameter : Nat) (scalar : NonZeroScalar) (auxiliary : Aux)
     (small : adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter < 2 ^ 101) :
     compiledAdaptiveDecision online adversary parameter scalar auxiliary =
-      GarbledCircuit.SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9806076
+      GarbledCircuit.SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9803316
         (compiledMachine 256) adversary parameter scalar auxiliary := by
   rw [sharedParsedGame_phases]
   have setupLaw := compiledSetupJoint_parsed 256 parameter (by decide) compiledMachine_setupBudget
@@ -74,7 +74,7 @@ theorem compiledIdealGame_finiteSource [FieldCertificate] [GroupCertificate] {Au
     (adversary : GarbledCircuit.AdaptiveAdversary sharedRealOracleSpec AffineInput Pipeline.Table GarbledCircuit.LamportSignature Aux)
     (parameter : Nat) (scalar : NonZeroScalar) (auxiliary : Aux)
     (small : adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter < 2 ^ 101) :
-    GarbledCircuit.SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9806076
+    GarbledCircuit.SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9803316
       (compiledMachine 256) adversary parameter scalar auxiliary =
       sharedWireFiniteDecision adversary parameter scalar auxiliary :=
   (compiledAdaptiveDecision_machine online implemented adversary parameter scalar auxiliary small).symm.trans

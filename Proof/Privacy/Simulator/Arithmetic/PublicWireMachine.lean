@@ -11,17 +11,17 @@ open BN254 Cryptography.BoundedMachine GarbledCircuit.SimulatorProtocol Security
 @[simp] theorem publicCurveWire_length : publicCurveWire.length = 1273 := by
   simp [publicCurveWire]
 
-@[simp] theorem publicXWire_length (row : Nat) : (publicXWire row).length = 1032 := by
+@[simp] theorem publicXWire_length (row : Nat) : (publicXWire row).length = 1022 := by
   simp [publicXWire, wireCoefficient, wireOptionalDigit]
 
-@[simp] theorem publicYWire_length (row : Nat) : (publicYWire row).length = 1031 := by
+@[simp] theorem publicYWire_length (row : Nat) : (publicYWire row).length = 1021 := by
   simp [publicYWire, wireCoefficient, wireOptionalDigit]
 
-@[simp] theorem publicZWire_length (row : Nat) : (publicZWire row).length = 1286 := by
+@[simp] theorem publicZWire_length (row : Nat) : (publicZWire row).length = 1276 := by
   simp [publicZWire, wireCoefficient, wireOptionalDigit]
 
-/-- The complete public wire has exactly 309381 fixed segments. -/
-theorem publicWire_length : publicWire.length = 309381 := by
+/-- The complete public wire has exactly 306621 fixed segments. -/
+theorem publicWire_length : publicWire.length = 306621 := by
   simp [publicWire, List.length_flatMap]
 
 attribute [local irreducible] publicWire wireSegmentsProgram

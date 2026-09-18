@@ -9,7 +9,7 @@ noncomputable section
 theorem compiledAdaptivePrivacy_of_onlineLaw [FieldCertificate] [GroupCertificate] [TerminationCertificate]
     {Aux : Type} (witness : Shared.Randomness)
     (implemented : CompiledOnlineCouplingLaw (compiledOnlineJoint 256)) :
-    GarbledCircuit.AdaptivePrivacy (Aux := Aux) Shared.wireCircuit Wire.encoding 9806076
+    GarbledCircuit.AdaptivePrivacy (Aux := Aux) Shared.wireCircuit Wire.encoding 9803316
       (uniformRandomTape Shared.Randomness witness) sharedRealOracleHandler
       circuitSimulatorOracleHandler CircuitSimulatorState.view := by
   apply sharedAdaptivePrivacy_of_finiteSource witness (compiledMachine 256)

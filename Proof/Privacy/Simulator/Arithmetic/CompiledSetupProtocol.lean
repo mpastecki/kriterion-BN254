@@ -30,21 +30,21 @@ theorem compiledMachine_setupResponse [FieldCertificate] (attempts parameter : N
     (attemptFits : attempts < 2 ^ 256)
     (enough : (initial (compiledMachine attempts)).spent +
       (2 + (batchStepBudget attempts * 917470 + publicWireProgram.length + 3)) ≤ budget 0) :
-    respond (compiledMachine attempts) ([false, false] ++ natural parameter ++ natural 9806076)
+    respond (compiledMachine attempts) ([false, false] ++ natural parameter ++ natural 9803316)
       (initial (compiledMachine attempts)) =
     (samplerBatchMemory offlinePlan attempts 917470 0
-      (offlineInitialMemory {bits := fun index => if index = 0 then natural parameter ++ natural 9806076 else []})).map
+      (offlineInitialMemory {bits := fun index => if index = 0 then natural parameter ++ natural 9803316 else []})).map
       (fun result => some ((executeLinear publicWireProgram result.1).bits 3,
         (⟨executeLinear publicWireProgram result.1,
           (compiledMachine attempts).size + 1 + (result.2 + publicWireProgram.length + 5), 0⟩ : State))) := by
-  let base : Memory := {bits := fun index => if index = 0 then natural parameter ++ natural 9806076 else []}
+  let base : Memory := {bits := fun index => if index = 0 then natural parameter ++ natural 9803316 else []}
   let inputMemory : Memory :=
     {(initial (compiledMachine attempts)).memory with
       bits := Function.update (Function.update (initial (compiledMachine attempts)).memory.bits 0
-        ([false, false] ++ natural parameter ++ natural 9806076)) 3 []}
-  have inputWire : inputMemory.bits 0 = false :: false :: (natural parameter ++ natural 9806076) := by
+        ([false, false] ++ natural parameter ++ natural 9803316)) 3 []}
+  have inputWire : inputMemory.bits 0 = false :: false :: (natural parameter ++ natural 9803316) := by
     simp [inputMemory]
-  have dispatched : phaseDispatchMemory inputMemory (natural parameter ++ natural 9806076) = base := by
+  have dispatched : phaseDispatchMemory inputMemory (natural parameter ++ natural 9803316) = base := by
     dsimp [phaseDispatchMemory, inputMemory, initial, base]
     congr 1
     funext index
@@ -52,7 +52,7 @@ theorem compiledMachine_setupResponse [FieldCertificate] (attempts parameter : N
     split_ifs <;> rfl
   have executed := compiledMachine_setupRun attempts
     (batchStepBudget attempts * 917470 + publicWireProgram.length + 3) inputMemory
-    (natural parameter ++ natural 9806076) inputWire
+    (natural parameter ++ natural 9803316) inputWire
   rw [dispatched] at executed
   have offline : run (offlineMachine attempts)
       (batchStepBudget attempts * 917470 + publicWireProgram.length + 3) ⟨0, base⟩ =
@@ -64,7 +64,7 @@ theorem compiledMachine_setupResponse [FieldCertificate] (attempts parameter : N
       (relocateConfiguration (phaseSetupLabels (offlineMachine attempts) (onlineMachine attempts)
         (recordedPublicHandler attempts)) result.1, result.2 + 2))) offline)
   have response := respond_source (compiledMachine attempts)
-    ([false, false] ++ natural parameter ++ natural 9806076) (initial (compiledMachine attempts))
+    ([false, false] ++ natural parameter ++ natural 9803316) (initial (compiledMachine attempts))
     (2 + (batchStepBudget attempts * 917470 + publicWireProgram.length + 3))
     ((samplerBatchMemory offlinePlan attempts 917470 0 (offlineInitialMemory base)).map fun result =>
       (relocateConfiguration (phaseSetupLabels (offlineMachine attempts) (onlineMachine attempts)
@@ -86,20 +86,20 @@ theorem compiledMachine_setupPublic [FieldCertificate] (attempts parameter : Nat
     (attemptFits : attempts < 2 ^ 256)
     (enough : (initial (compiledMachine attempts)).spent +
       (2 + (batchStepBudget attempts * 917470 + publicWireProgram.length + 3)) ≤ budget 0) :
-    (respond (compiledMachine attempts) ([false, false] ++ natural parameter ++ natural 9806076)
+    (respond (compiledMachine attempts) ([false, false] ++ natural parameter ++ natural 9803316)
       (initial (compiledMachine attempts))).map
-      (fun result => result.bind fun result => publicValue Wire.encoding 9806076 result.1) =
+      (fun result => result.bind fun result => publicValue Wire.encoding 9803316 result.1) =
       (SimulatorSampling.offline.total attempts).law.map (fun coin => some (publicSourceTable coin.1)) := by
   rw [compiledMachine_setupResponse attempts parameter attemptFits enough, PMF.map_comp]
   exact offlineMemory_public attempts
-    (offlineInitialMemory {bits := fun index => if index = 0 then natural parameter ++ natural 9806076 else []})
+    (offlineInitialMemory {bits := fun index => if index = 0 then natural parameter ++ natural 9803316 else []})
     (by simp [offlineInitialMemory]) (by simp [offlineInitialMemory])
 
 /-- The fixed retry count has the canonical setup law within the shared budget. -/
 theorem compiledMachine_setupPublic256 [FieldCertificate] (parameter : Nat) :
-    (respond (compiledMachine 256) ([false, false] ++ natural parameter ++ natural 9806076)
+    (respond (compiledMachine 256) ([false, false] ++ natural parameter ++ natural 9803316)
       (initial (compiledMachine 256))).map
-      (fun result => result.bind fun result => publicValue Wire.encoding 9806076 result.1) =
+      (fun result => result.bind fun result => publicValue Wire.encoding 9803316 result.1) =
       (SimulatorSampling.offline.total 256).law.map (fun coin => some (publicSourceTable coin.1)) :=
   compiledMachine_setupPublic 256 parameter (by decide) compiledMachine_setupBudget
 

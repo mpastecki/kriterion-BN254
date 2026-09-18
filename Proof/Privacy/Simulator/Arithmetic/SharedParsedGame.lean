@@ -8,8 +8,8 @@ attribute [local irreducible] runProgram
 
 /-- The setup parser retains the complete public table and machine state. -/
 def sharedParsedSetup [FieldCertificate] (machine : Machine) (parameter : Nat) : PMF (Option (Pipeline.Table × State)) :=
-  (respond machine ([false, false] ++ natural parameter ++ natural 9806076) (initial machine)).map
-    (fun result => result.bind fun result => (publicValue Wire.encoding 9806076 result.1).map fun table => (table, result.2))
+  (respond machine ([false, false] ++ natural parameter ++ natural 9803316) (initial machine)).map
+    (fun result => result.bind fun result => (publicValue Wire.encoding 9803316 result.1).map fun table => (table, result.2))
 
 /-- The online parser retains the exact selected wire labels and machine state. -/
 def sharedParsedOnline [FieldCertificate] (machine : Machine) (state : State)
@@ -22,7 +22,7 @@ theorem sharedParsedGame_phases [FieldCertificate] [GroupCertificate] {Aux : Typ
     (machine : Machine)
     (adversary : GarbledCircuit.AdaptiveAdversary sharedRealOracleSpec AffineInput Pipeline.Table GarbledCircuit.LamportSignature Aux)
     (parameter : Nat) (scalar : NonZeroScalar) (auxiliary : Aux) :
-    GarbledCircuit.SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9806076 machine adversary parameter scalar auxiliary =
+    GarbledCircuit.SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9803316 machine adversary parameter scalar auxiliary =
       (bindCutoff (sharedParsedSetup machine parameter) fun setup =>
         bindCutoff (runProgram machine (adversary.chooseInput parameter setup.1 auxiliary) setup.2).run fun selected =>
           bindCutoff (sharedParsedOnline machine selected.2 selected.1.1 (Shared.wireCircuit.function scalar selected.1.1)) fun encoded =>
@@ -36,7 +36,7 @@ theorem sharedParsedGame_phases [FieldCertificate] [GroupCertificate] {Aux : Typ
   cases setup with
   | none => rfl
   | some setup =>
-      cases decoded : publicValue Wire.encoding 9806076 setup.1 with
+      cases decoded : publicValue Wire.encoding 9803316 setup.1 with
       | none => simp only [Option.bind_some, decoded, PMF.pure_bind, Option.map_none, Option.bind_none]
       | some table =>
           simp only [decoded, PMF.pure_bind, Option.map_some, Option.bind_some]

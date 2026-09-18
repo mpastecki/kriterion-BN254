@@ -17,7 +17,7 @@ theorem compiledOnlineJoint_coupling [FieldCertificate] [GroupCertificate] :
 /-- The concrete fixed instruction machine satisfies the complete revised adaptive privacy property. -/
 theorem compiledAdaptivePrivacy [FieldCertificate] [GroupCertificate] [TerminationCertificate]
     {Aux : Type} (witness : Shared.Randomness) :
-    GarbledCircuit.AdaptivePrivacy (Aux := Aux) Shared.wireCircuit Wire.encoding 9806076
+    GarbledCircuit.AdaptivePrivacy (Aux := Aux) Shared.wireCircuit Wire.encoding 9803316
       (uniformRandomTape Shared.Randomness witness) sharedRealOracleHandler
       circuitSimulatorOracleHandler CircuitSimulatorState.view :=
   compiledAdaptivePrivacy_of_onlineLaw witness compiledOnlineJoint_coupling

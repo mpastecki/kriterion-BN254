@@ -9,7 +9,7 @@ attribute [local irreducible] publicWireProgram offlinePlan samplerBatchMemory o
 
 /-- The setup body receives only the public parameter and byte count. -/
 def compiledSetupBase (parameter : Nat) : Memory :=
-  {bits := fun index => if index = 0 then natural parameter ++ natural 9806076 else []}
+  {bits := fun index => if index = 0 then natural parameter ++ natural 9803316 else []}
 
 /-- The setup state retains its memory and complete execution charge. -/
 def compiledSetupState (attempts : Nat) (result : Memory × Nat) : State :=
@@ -27,7 +27,7 @@ theorem compiledSetupJoint_machine [FieldCertificate] (attempts parameter : Nat)
     (enough : (initial (compiledMachine attempts)).spent +
       (2 + (batchStepBudget attempts * 917470 + publicWireProgram.length + 3)) ≤ budget 0) :
     (compiledSetupJoint attempts parameter).map (fun result => some (result.1.memory.bits 3, result.1)) =
-      respond (compiledMachine attempts) ([false, false] ++ natural parameter ++ natural 9806076)
+      respond (compiledMachine attempts) ([false, false] ++ natural parameter ++ natural 9803316)
         (initial (compiledMachine attempts)) := by
   rw [compiledMachine_setupResponse attempts parameter attemptFits enough]
   simp only [compiledSetupJoint, offlineSourceJoint, PMF.map_comp, Function.comp_def]
@@ -74,7 +74,7 @@ theorem compiledSetupJoint_cost [FieldCertificate] (attempts parameter : Nat)
 theorem compiledSetupJoint_public [FieldCertificate] (attempts parameter : Nat)
     (state : State) (coin : SimulatorSampling.OfflineCoin)
     (supported : (state, coin) ∈ (compiledSetupJoint attempts parameter).support) :
-    publicValue Wire.encoding 9806076 (state.memory.bits 3) = some (publicSourceTable coin.1) := by
+    publicValue Wire.encoding 9803316 (state.memory.bits 3) = some (publicSourceTable coin.1) := by
   obtain ⟨result, member, same⟩ := (PMF.mem_support_map_iff _ _ _).mp supported
   cases same
   have actual : result.1 ∈ (samplerBatchMemory offlinePlan attempts 917470 0
@@ -91,10 +91,10 @@ theorem compiledSetupJoint_public [FieldCertificate] (attempts parameter : Nat)
     rw [pointer]
     simp [offlineInitialMemory]
   rw [← pointers] at stored
-  change publicValue Wire.encoding 9806076 ((executeLinear publicWireProgram result.1.1).bits 3) = _
+  change publicValue Wire.encoding 9803316 ((executeLinear publicWireProgram result.1.1).bits 3) = _
   rw [publicWireProgram_bits result.2 result.1.1 stored, Function.update_self, bitsSaved]
   simp only [offlineInitialMemory, compiledSetupBase, if_neg (by decide : (3 : Fin 4) ≠ 0), List.append_nil]
-  exact publicValue_bytes Wire.encoding (publicSourceTable result.2.1) 9806076 (publicSourceTable_length result.2.1)
+  exact publicValue_bytes Wire.encoding (publicSourceTable result.2.1) 9803316 (publicSourceTable_length result.2.1)
 
 /-- The parsed setup response has the exact joint public table and machine state law. -/
 theorem compiledSetupJoint_parsed [FieldCertificate] (attempts parameter : Nat)
@@ -102,9 +102,9 @@ theorem compiledSetupJoint_parsed [FieldCertificate] (attempts parameter : Nat)
     (enough : (initial (compiledMachine attempts)).spent +
       (2 + (batchStepBudget attempts * 917470 + publicWireProgram.length + 3)) ≤ budget 0) :
     (compiledSetupJoint attempts parameter).map (fun result => some (publicSourceTable result.2.1, result.1)) =
-      (respond (compiledMachine attempts) ([false, false] ++ natural parameter ++ natural 9806076)
+      (respond (compiledMachine attempts) ([false, false] ++ natural parameter ++ natural 9803316)
         (initial (compiledMachine attempts))).map (fun result => result.bind fun result =>
-          (publicValue Wire.encoding 9806076 result.1).map fun table => (table, result.2)) := by
+          (publicValue Wire.encoding 9803316 result.1).map fun table => (table, result.2)) := by
   rw [← compiledSetupJoint_machine attempts parameter attemptFits enough, PMF.map_comp]
   change (compiledSetupJoint attempts parameter).bind _ = (compiledSetupJoint attempts parameter).bind _
   apply ThreePhase.bind_eq_on_support

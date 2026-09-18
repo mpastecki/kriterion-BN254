@@ -54,7 +54,7 @@ theorem sharedExactSourceDecision_idealGame [FieldCertificate] [GroupCertificate
     sharedExactSourceDecision sharedOfflineFrame (sharedWireSourceChoose adversary parameter auxiliary)
       Prod.fst (fun selected => Shared.wireCircuit.function scalar selected.1)
       (sharedWireSourceDecide adversary parameter auxiliary) (fun _ => initialSharedOracleSource emptySharedMetadata) =
-    idealGame Shared.wireCircuit (fun _ => 9806076) Shared.Simulator.wireSimulator
+    idealGame Shared.wireCircuit (fun _ => 9803316) Shared.Simulator.wireSimulator
       circuitSimulatorOracleHandler adversary parameter scalar auxiliary := by
   simp only [sharedExactSourceDecision, initialSharedOracleSource_completion, PMF.bind_map, sharedAdaptiveProgram_run,
     sharedWireSourceChoose, sharedWireSourceDecide, PMF.map_bind, Function.comp_def]

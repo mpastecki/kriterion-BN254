@@ -9,7 +9,7 @@ theorem offlineMachine_public [FieldCertificate] (attempts : Nat) (base : Memory
     (countFits : attempts < 2 ^ 256) (empty : base.bits 3 = []) :
     (run (offlineMachine attempts) (batchStepBudget attempts * 917470 + publicWireProgram.length + 3)
       ⟨⟨0, Nat.zero_lt_succ _⟩, base⟩).map
-      (fun result => result.bind fun result => publicValue Wire.encoding 9806076 (result.1.memory.bits 3)) =
+      (fun result => result.bind fun result => publicValue Wire.encoding 9803316 (result.1.memory.bits 3)) =
       (SimulatorSampling.offline.total attempts).law.map (fun coin => some (publicSourceTable coin.1)) := by
   rw [offlineMachine_run attempts base countFits, PMF.map_comp]
   simp only [Function.comp_def, Option.bind_some]
@@ -20,7 +20,7 @@ theorem offlineMachine_public [FieldCertificate] (attempts : Nat) (base : Memory
 theorem offlineMachine_256_public [FieldCertificate] (base : Memory) (empty : base.bits 3 = []) :
     (run (offlineMachine 256) (batchStepBudget 256 * 917470 + publicWireProgram.length + 3)
       ⟨⟨0, Nat.zero_lt_succ _⟩, base⟩).map
-      (fun result => result.bind fun result => publicValue Wire.encoding 9806076 (result.1.memory.bits 3)) =
+      (fun result => result.bind fun result => publicValue Wire.encoding 9803316 (result.1.memory.bits 3)) =
       (SimulatorSampling.offline.total 256).law.map (fun coin => some (publicSourceTable coin.1)) :=
   offlineMachine_public 256 base (by decide) empty
 

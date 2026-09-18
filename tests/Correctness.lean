@@ -50,5 +50,5 @@ def argoMACSharedLamportCompatible [FieldCertificate] [GroupCertificate] :
 theorem argoMACSharedCiphertextSize [FieldCertificate] [GroupCertificate]
     (parameter : Nat) (scalar : NonZeroScalar) (tape : ArgoMAC.Shared.Randomness) :
     (ArgoMAC.Wire.encoding.encode
-      (ArgoMAC.Shared.wireCircuit.garble parameter scalar tape).1).length = 9806076 :=
+      (ArgoMAC.Shared.wireCircuit.garble parameter scalar tape).1).length = 9803316 :=
   ArgoMAC.Shared.ciphertextSize parameter scalar tape

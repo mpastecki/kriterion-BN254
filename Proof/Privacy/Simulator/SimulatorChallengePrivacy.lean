@@ -72,7 +72,7 @@ theorem wire_ideal [FieldCertificate] [GroupCertificate] {Aux : Type}
     (adversary : AdaptiveAdversary Garbling.oracleSpec AffineInput Pipeline.Table LamportSignature Aux)
     (parameter : Nat) (scalar : NonZeroScalar) (auxiliary : Aux) :
     operationalIdealGame (wireAdversary adversary) parameter scalar auxiliary =
-      idealGame Lamport.wireCircuit (fun _ => 9806076) wireSimulator
+      idealGame Lamport.wireCircuit (fun _ => 9803316) wireSimulator
         circuitSimulatorOracleHandler adversary parameter scalar auxiliary := by
   rw [operationalIdealGame_eq]
   simp only [ThreePhase.idealGame, wireAdversary, OracleProgram.run_pure,
@@ -86,10 +86,10 @@ theorem adaptivePrivacy_of_machine [FieldCertificate] [GroupCertificate]
     (witness : Garbling.Randomness) (machine : BoundedMachine.Machine)
     (implementation : ∀ (adversary : AdaptiveAdversary Garbling.oracleSpec
         AffineInput Pipeline.Table LamportSignature Aux) parameter scalar auxiliary,
-      SimulatorProtocol.idealGame Lamport.wireCircuit Kriterion.ArgoMAC.Wire.encoding 9806076 machine
+      SimulatorProtocol.idealGame Lamport.wireCircuit Kriterion.ArgoMAC.Wire.encoding 9803316 machine
         adversary parameter scalar auxiliary =
       game 256 (wireAdversary adversary) parameter scalar auxiliary) :
-    AdaptivePrivacy (Aux := Aux) Lamport.wireCircuit Kriterion.ArgoMAC.Wire.encoding 9806076 (randomTape witness)
+    AdaptivePrivacy (Aux := Aux) Lamport.wireCircuit Kriterion.ArgoMAC.Wire.encoding 9803316 (randomTape witness)
       Garbling.oracleHandler circuitSimulatorOracleHandler CircuitSimulatorState.view := by
   refine ⟨wireSimulator, machine, concreteCircuitSimulator_rules.mapLabels _ _, ?_⟩
   intro adversary parameter scalar auxiliary

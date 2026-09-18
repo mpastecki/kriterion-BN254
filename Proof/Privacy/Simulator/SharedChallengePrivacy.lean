@@ -26,7 +26,7 @@ theorem sharedWireAdvantage_envelope [FieldCertificate] [GroupCertificate] [Term
     advantage
       (realGame Shared.wireCircuit (uniformRandomTape Shared.Randomness witness)
         sharedRealOracleHandler adversary parameter scalar auxiliary)
-      (idealGame Shared.wireCircuit (fun _ => 9806076) Shared.Simulator.wireSimulator
+      (idealGame Shared.wireCircuit (fun _ => 9803316) Shared.Simulator.wireSimulator
         circuitSimulatorOracleHandler adversary parameter scalar auxiliary) ≤
       adaptiveErrorEnvelope (adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter) := by
   have bound := sharedAdaptiveAdvantage_envelope (sharedWireAdversary adversary)
@@ -43,11 +43,11 @@ theorem sharedAdaptivePrivacy_of_machine [FieldCertificate] [GroupCertificate] [
       let queries := adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter
       queries < 2 ^ 101 →
       advantage
-        (idealGame Shared.wireCircuit (fun _ => 9806076) Shared.Simulator.wireSimulator
+        (idealGame Shared.wireCircuit (fun _ => 9803316) Shared.Simulator.wireSimulator
           circuitSimulatorOracleHandler adversary parameter scalar auxiliary)
-        (SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9806076 machine
+        (SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9803316 machine
           adversary parameter scalar auxiliary) ≤ sharedMachineCutoffAllowance queries) :
-    AdaptivePrivacy (Aux := Aux) Shared.wireCircuit Wire.encoding 9806076
+    AdaptivePrivacy (Aux := Aux) Shared.wireCircuit Wire.encoding 9803316
       (uniformRandomTape Shared.Randomness witness) sharedRealOracleHandler
       circuitSimulatorOracleHandler CircuitSimulatorState.view := by
   refine ⟨Shared.Simulator.wireSimulator, machine, Shared.Simulator.wire_oracleSimulation, ?_⟩

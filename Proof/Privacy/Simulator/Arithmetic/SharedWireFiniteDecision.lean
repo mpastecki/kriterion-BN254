@@ -18,7 +18,7 @@ theorem sharedWireFiniteDecision_bound [FieldCertificate] [GroupCertificate] {Au
     (adversary : AdaptiveAdversary sharedRealOracleSpec AffineInput Pipeline.Table LamportSignature Aux)
     (parameter : Nat) (scalar : NonZeroScalar) (auxiliary : Aux) :
     advantage
-      (idealGame Shared.wireCircuit (fun _ => 9806076) Shared.Simulator.wireSimulator
+      (idealGame Shared.wireCircuit (fun _ => 9803316) Shared.Simulator.wireSimulator
         circuitSimulatorOracleHandler adversary parameter scalar auxiliary)
       (sharedWireFiniteDecision adversary parameter scalar auxiliary) ≤
       sharedMachineCutoffAllowance (adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter) := by
@@ -37,9 +37,9 @@ theorem sharedAdaptivePrivacy_of_finiteSource [FieldCertificate] [GroupCertifica
     (implementation : ∀ (adversary : AdaptiveAdversary sharedRealOracleSpec
         AffineInput Pipeline.Table LamportSignature Aux) parameter scalar auxiliary,
       adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter < 2 ^ 101 →
-      SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9806076 machine adversary parameter scalar auxiliary =
+      SimulatorProtocol.idealGame Shared.wireCircuit Wire.encoding 9803316 machine adversary parameter scalar auxiliary =
         sharedWireFiniteDecision adversary parameter scalar auxiliary) :
-    AdaptivePrivacy (Aux := Aux) Shared.wireCircuit Wire.encoding 9806076
+    AdaptivePrivacy (Aux := Aux) Shared.wireCircuit Wire.encoding 9803316
       (uniformRandomTape Shared.Randomness witness) sharedRealOracleHandler
       circuitSimulatorOracleHandler CircuitSimulatorState.view := by
   apply sharedAdaptivePrivacy_of_machine witness machine

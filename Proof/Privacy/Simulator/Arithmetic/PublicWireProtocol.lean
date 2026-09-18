@@ -24,15 +24,15 @@ theorem publicWireMachine_protocol [FieldCertificate] (coin : SimulatorSampling.
     (run publicWireMachine (publicWireProgram.length + 1)
       ⟨⟨0, Nat.zero_lt_succ publicWireMachine.size⟩, memory⟩).map
       (fun result => result.bind fun result =>
-        publicValue Wire.encoding 9806076 (result.1.memory.bits 3)) =
+        publicValue Wire.encoding 9803316 (result.1.memory.bits 3)) =
       PMF.pure (some (publicSourceTable coin.1)) := by
   apply parse_mapped_output
     (run publicWireMachine (publicWireProgram.length + 1)
       ⟨⟨0, Nat.zero_lt_succ publicWireMachine.size⟩, memory⟩)
     (fun result : Configuration (publicWireMachine.size + 1) × Nat => (result.1.memory.bits 3, result.1.memory.ram, result.2))
-    (fun result : List Bool × (Word → Word) × Nat => publicValue Wire.encoding 9806076 result.1)
+    (fun result : List Bool × (Word → Word) × Nat => publicValue Wire.encoding 9803316 result.1)
     _ _ (publicWireMachine_run coin memory stored)
   rw [empty, List.append_nil]
-  exact publicValue_bytes Wire.encoding (publicSourceTable coin.1) 9806076 (publicSourceTable_length coin.1)
+  exact publicValue_bytes Wire.encoding (publicSourceTable coin.1) 9803316 (publicSourceTable_length coin.1)
 
 end Kriterion.ArgoMAC.ArithmeticSimulator

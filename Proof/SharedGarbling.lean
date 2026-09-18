@@ -15,7 +15,7 @@ theorem paperParameters : FieldMacToECMac.outputMacCount = 92 ∧
 /-- Sharing permutations does not change the table encoding. -/
 theorem ciphertextSize [FieldCertificate] [GroupCertificate]
     (parameter : Nat) (scalar : NonZeroScalar) (tape : Randomness) :
-    (Wire.encoding.encode (wireCircuit.garble parameter scalar tape).1).length = 9806076 :=
+    (Wire.encoding.encode (wireCircuit.garble parameter scalar tape).1).length = 9803316 :=
   Wire.ciphertextSize parameter scalar tape.val
 
 /-- The shared-slot circuit sends the same 508 selected Lamport labels. -/

@@ -22,19 +22,19 @@ theorem publicXWire_bits (sample : RowPublicSample) (row : Nat) (ram : Word → 
     simpa only [coordinateBitCount, Nat.reduceMul, Nat.reduceAdd, Nat.add_assoc] using
       gateData_table 5 4 _ ram pointer (base + 6867) gate index source
   simp only [publicXWire, List.flatMap_append, List.flatMap_cons, List.flatMap_nil, List.append_nil,
-    Wire.biquadratic, Encoding.map, Encoding.pair, XPublicSample.request, BiquadraticXRequest.table]
-  rw [wireCoefficient_bits ram pointer (base + 9915) 0 _ (coefficient 0),
+    XPublicSample.request, BiquadraticXRequest.table]
+  rw [Wire.biquadratic_encode_x]
+  simp only [List.flatMap_cons, List.flatMap_append, List.flatMap_nil, List.append_nil]
+  rw [wireHeader_bits, wireCoefficient_bits ram pointer (base + 9915) 0 _ (coefficient 0),
     wireCoefficient_bits ram pointer (base + 9915) 1 _ (coefficient 1),
     wireCoefficient_bits ram pointer (base + 9915) 2 _ (coefficient 2),
     wireCoefficient_bits ram pointer (base + 9915) 3 _ (coefficient 3),
     wireCoefficient_bits ram pointer (base + 9915) 4 _ (coefficient 4),
+    wireOptionalDigit_bits ram pointer (base + 8899) 3 _ (table 3),
     wireOptionalDigit_bits ram pointer (base + 8899) 0 _ (table 0),
     wireOptionalDigit_bits ram pointer (base + 8899) 1 _ (table 1),
-    wireOptionalDigit_bits ram pointer (base + 8899) 2 _ (table 2),
-    wireOptionalDigit_bits ram pointer (base + 8899) 3 _ (table 3)]
-  simp only [wireCoefficient, wireOptionalDigit, List.flatMap_cons, List.flatMap_nil, List.append_nil,
-    WireSegment.wire, publicOption_none, List.append_assoc]
-  rfl
+    wireOptionalDigit_bits ram pointer (base + 8899) 2 _ (table 2)]
+  simp [List.append_assoc]
 
 /-- The stored Y row emits its complete canonical public table. -/
 theorem publicYWire_bits (sample : RowPublicSample) (row : Nat) (ram : Word → Word) (pointer : Word)
@@ -54,18 +54,18 @@ theorem publicYWire_bits (sample : RowPublicSample) (row : Nat) (ram : Word → 
     simpa only [coordinateBitCount, Nat.reduceMul, Nat.reduceAdd, Nat.add_assoc] using
       gateData_table 4 4 _ ram pointer (base + 3815) gate index source
   simp only [publicYWire, List.flatMap_append, List.flatMap_cons, List.flatMap_nil, List.append_nil,
-    Wire.biquadratic, Encoding.map, Encoding.pair, YPublicSample.request, BiquadraticYRequest.table]
-  rw [wireCoefficient_bits ram pointer (base + 6863) 0 _ (coefficient 0),
+    YPublicSample.request, BiquadraticYRequest.table]
+  rw [Wire.biquadratic_encode_y]
+  simp only [List.flatMap_cons, List.flatMap_append, List.flatMap_nil, List.append_nil]
+  rw [wireHeader_bits, wireCoefficient_bits ram pointer (base + 6863) 0 _ (coefficient 0),
     wireCoefficient_bits ram pointer (base + 6863) 1 _ (coefficient 1),
     wireCoefficient_bits ram pointer (base + 6863) 2 _ (coefficient 2),
     wireCoefficient_bits ram pointer (base + 6863) 3 _ (coefficient 3),
-    wireOptionalDigit_bits ram pointer (base + 5847) 0 _ (table 0),
-    wireOptionalDigit_bits ram pointer (base + 5847) 1 _ (table 1),
     wireOptionalDigit_bits ram pointer (base + 5847) 2 _ (table 2),
-    wireOptionalDigit_bits ram pointer (base + 5847) 3 _ (table 3)]
-  simp only [wireCoefficient, wireOptionalDigit, List.flatMap_cons, List.flatMap_nil, List.append_nil,
-    WireSegment.wire, publicOption_none, List.append_assoc]
-  rfl
+    wireOptionalDigit_bits ram pointer (base + 5847) 3 _ (table 3),
+    wireOptionalDigit_bits ram pointer (base + 5847) 0 _ (table 0),
+    wireOptionalDigit_bits ram pointer (base + 5847) 1 _ (table 1)]
+  simp [List.append_assoc]
 
 /-- The stored Z row emits its complete canonical public table. -/
 theorem publicZWire_bits (sample : RowPublicSample) (row : Nat) (ram : Word → Word) (pointer : Word)
@@ -85,19 +85,19 @@ theorem publicZWire_bits (sample : RowPublicSample) (row : Nat) (ram : Word → 
     simpa only [coordinateBitCount, Nat.reduceMul, Nat.reduceAdd, Nat.add_assoc] using
       gateData_table 5 5 _ ram pointer (base + 0) gate index source
   simp only [publicZWire, List.flatMap_append, List.flatMap_cons, List.flatMap_nil, List.append_nil,
-    Wire.biquadratic, Encoding.map, Encoding.pair, ZPublicSample.request, BiquadraticZRequest.table]
-  rw [wireCoefficient_bits ram pointer (base + 3810) 0 _ (coefficient 0),
+    ZPublicSample.request, BiquadraticZRequest.table]
+  rw [Wire.biquadratic_encode_z]
+  simp only [List.flatMap_cons, List.flatMap_append, List.flatMap_nil, List.append_nil]
+  rw [wireHeader_bits, wireCoefficient_bits ram pointer (base + 3810) 0 _ (coefficient 0),
     wireCoefficient_bits ram pointer (base + 3810) 1 _ (coefficient 1),
     wireCoefficient_bits ram pointer (base + 3810) 2 _ (coefficient 2),
     wireCoefficient_bits ram pointer (base + 3810) 3 _ (coefficient 3),
     wireCoefficient_bits ram pointer (base + 3810) 4 _ (coefficient 4),
+    wireOptionalDigit_bits ram pointer (base + 2540) 3 _ (table 3),
+    wireOptionalDigit_bits ram pointer (base + 2540) 4 _ (table 4),
     wireOptionalDigit_bits ram pointer (base + 2540) 0 _ (table 0),
     wireOptionalDigit_bits ram pointer (base + 2540) 1 _ (table 1),
-    wireOptionalDigit_bits ram pointer (base + 2540) 2 _ (table 2),
-    wireOptionalDigit_bits ram pointer (base + 2540) 3 _ (table 3),
-    wireOptionalDigit_bits ram pointer (base + 2540) 4 _ (table 4)]
-  simp only [wireCoefficient, wireOptionalDigit, List.flatMap_cons, List.flatMap_nil, List.append_nil,
-    WireSegment.wire, publicOption_none, List.append_assoc]
-  rfl
+    wireOptionalDigit_bits ram pointer (base + 2540) 2 _ (table 2)]
+  simp [List.append_assoc]
 
 end Kriterion.ArgoMAC.ArithmeticSimulator
