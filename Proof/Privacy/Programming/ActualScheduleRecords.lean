@@ -94,11 +94,9 @@ def BiquadraticXRequest.actualDirective (request : BiquadraticXRequest)
 def BiquadraticYRequest.actualDirective (request : BiquadraticYRequest)
     (output : Fin FieldMacToECMac.outputMacCount)
     (input : AffineInput) (inputMac : InputMac)
-    (adaptor : Fin 4) (bit : Fin coordinateBitCount) : GateDirective :=
-  (![actualDigitDirective (.point output .y .y8) request.y8Table (coordinateValues input.y)
-      inputMac.y request.y8Targets request.y8Lifts,
-    actualDigitDirective (.point output .y .y10) request.y10Table (coordinateValues input.y)
-      inputMac.y request.y10Targets request.y10Lifts,
+    (adaptor : Fin 3) (bit : Fin coordinateBitCount) : GateDirective :=
+  (![actualDigitDirective (.point output .y .y8) request.y8Table (coordinateValues input.x)
+      inputMac.x request.y8Targets request.y8Lifts,
     actualDigitDirective (.point output .y .x7) request.x7Table (coordinateValues input.x)
       inputMac.x request.x7Targets request.x7Lifts,
     actualDigitDirective (.point output .y .x9) request.x9Table (coordinateValues input.x)
@@ -130,6 +128,10 @@ def actualCircuitDirective (curve : CurveGateRequest) (points : PointGateRequest
       (points.get row).y.actualDirective row input pointInputMac adaptor bit
   | .inr (row, .inr (.inr (adaptor, bit))) =>
       (points.get row).z.actualDirective row input pointInputMac adaptor bit
+
+private theorem mem_three {Value : Type} (value : Value) (a b c : List Value) :
+    value ∈ a ++ b ++ c ↔ ∃ index : Fin 3, value ∈ ![a,b,c] index := by
+  simp [Fin.exists_fin_succ]
 
 private theorem mem_four {α : Type} (a b c d : List α) (value : α) :
     value ∈ a ++ b ++ c ++ d ↔ ∃ index : Fin 4, value ∈ ![a,b,c,d] index := by
@@ -174,7 +176,7 @@ theorem BiquadraticYRequest.mem_schedule_iff (request : BiquadraticYRequest)
       ∃ adaptor bit, request.actualDirective output input inputMac adaptor bit = directive := by
   unfold BiquadraticYRequest.schedule
   unfold biquadraticYGateSchedule
-  rw [mem_four]
+  rw [mem_three]
   apply exists_congr
   intro adaptor
   fin_cases adaptor <;>
@@ -309,6 +311,7 @@ def circuitBucketInputBit (input : AffineInput) (bucket : RawLabelBucket) : Bool
   | .curve .x3 | .curve .x5 | .curve .x7 => coordinateValues input.x bucket.2
   | .curve .y4 | .curve .y6 => coordinateValues input.y bucket.2
   | .point _ .x7 | .point _ .x9 => coordinateValues input.x bucket.2
+  | .point .y .y8 => coordinateValues input.x bucket.2
   | .point _ .y6 | .point _ .y8 | .point _ .y10 => coordinateValues input.y bucket.2
 
 /-- Every bucket uses one selected coordinate label. -/
@@ -318,6 +321,7 @@ def circuitBucketInputLabel (curveInputMac pointInputMac : InputMac)
   | .curve .x3 | .curve .x5 | .curve .x7 => curveInputMac.x.get bucket.2
   | .curve .y4 | .curve .y6 => curveInputMac.y.get bucket.2
   | .point _ .x7 | .point _ .x9 => pointInputMac.x.get bucket.2
+  | .point .y .y8 => pointInputMac.x.get bucket.2
   | .point _ .y6 | .point _ .y8 | .point _ .y10 => pointInputMac.y.get bucket.2
 
 theorem actualCircuitDirective_bit

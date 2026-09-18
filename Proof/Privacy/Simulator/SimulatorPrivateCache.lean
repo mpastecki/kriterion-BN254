@@ -26,12 +26,12 @@ theorem cacheWithCost_coin (arrays : OfflineArrays) :
     (cacheWithCost arrays).1.coin = offlineArraysEquiv arrays := rfl
 
 theorem cacheWithCost_count (arrays : OfflineArrays) :
-    (cacheWithCost arrays).2 = 59760 :=
+    (cacheWithCost arrays).2 = 56848 :=
   prepareOfflineWithCost_count arrays (privateView (offlineArraysEquiv arrays)).oracle
 
 theorem rowArrays_drawSizeLe : rowArrays.DrawSizeLe (2 ^ 256) :=
   Code.pair_drawSizeLe _ _ (gateArrays_drawSizeLe 5 4)
-    (Code.pair_drawSizeLe _ _ (gateArrays_drawSizeLe 4 4) (gateArrays_drawSizeLe 5 5))
+    (Code.pair_drawSizeLe _ _ (gateArrays_drawSizeLe 4 3) (gateArrays_drawSizeLe 5 5))
 
 theorem publicArrays_drawSizeLe : publicArrays.DrawSizeLe (2 ^ 256) :=
   Code.pair_drawSizeLe _ _ (gateArrays_drawSizeLe 3 5)

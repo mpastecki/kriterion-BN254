@@ -1273,7 +1273,7 @@ deriving Fintype, Inhabited
 def yCoefficientTransport (c0 c1 c4 c5 : BaseField) :
     YCoefficientCoin → YCoefficients :=
   fun coin => {
-    c0 := c0 - coin.zeroPad
+    c0 := c0 + 3 * c5 - coin.zeroPad
     c1 := c1 + coin.r1
     c4 := c4 + coin.r4
     c5 := c5 + coin.r5
@@ -1283,7 +1283,7 @@ def yCoefficientTransport (c0 c1 c4 c5 : BaseField) :
 def yCoefficientTransportInverse (c0 c1 c4 c5 : BaseField) :
     YCoefficients → YCoefficientCoin :=
   fun coefficients => {
-    zeroPad := c0 - coefficients.c0
+    zeroPad := c0 + 3 * c5 - coefficients.c0
     r1 := coefficients.c1 - c1
     r4 := coefficients.c4 - c4
     r5 := coefficients.c5 - c5
@@ -1338,28 +1338,20 @@ theorem biquadraticGarbleY_coefficients
     YCoefficients.ofTable
         (Biquadratic.garbleY c0 c1 c4 c5 randomness oracles inputKey) =
       yCoefficientTransport c0 c1 c4 c5 {
-        zeroPad := biquadraticZeroPad oracles inputKey
+        zeroPad := digitPublicOffset oracles.x9 inputKey.x
         r1 := randomness.r1
         r4 := randomness.r4
         r5 := randomness.r5
       } := by
-  let y8 := DigitAdaptor.garble oracles.y8 (-randomness.r5) inputKey.y
-  let r8 := DigitAdaptor.bitsK y8.2
-  let y10 := DigitAdaptor.garble oracles.y10 (-r8) inputKey.y
-  let r10 := DigitAdaptor.bitsK y10.2
-  let x7 := DigitAdaptor.garble oracles.x7 (-randomness.r4) inputKey.x
-  let r7 := DigitAdaptor.bitsK x7.2
-  let x9 := DigitAdaptor.garble oracles.x9 (-(randomness.r1 + r7)) inputKey.x
-  let r9 := DigitAdaptor.bitsK x9.2
-  have r10Public : r10 = digitPublicOffset oracles.y10 inputKey.y :=
-    digitBitsK_independentOfSlope _ _ _ _
-  have r9Public : r9 = digitPublicOffset oracles.x9 inputKey.x :=
-    digitBitsK_independentOfSlope _ _ _ _
-  change YCoefficients.mk (c0 - r10 - r9) (c1 + randomness.r1)
-    (c4 + randomness.r4) (c5 + randomness.r5) = _
-  rw [r10Public, r9Public]
-  simp only [yCoefficientTransport, biquadraticZeroPad]
-  rw [sub_sub]
+  have offset := digitBitsK_independentOfSlope oracles.x9
+    (-(randomness.r1 + DigitAdaptor.bitsK
+      (DigitAdaptor.garble oracles.x7
+        (-(randomness.r4 + DigitAdaptor.bitsK
+          (DigitAdaptor.garble oracles.y8 (-randomness.r5) inputKey.x).2)) inputKey.x).2))
+    0 inputKey.x
+  simp only [YCoefficients.ofTable, Biquadratic.garbleY, Option.getD_some, yCoefficientTransport]
+  rw [offset]
+  rfl
 
 /-- These values are the five independent masks for an RCB Z table. -/
 structure ZCoefficientCoin where

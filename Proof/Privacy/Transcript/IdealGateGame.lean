@@ -125,7 +125,7 @@ theorem fullGateSource_idealTranscript_bound [FieldCertificate] [GroupCertificat
       ((idealAdaptiveTranscriptWithState (Garbling.garbledCircuit construction) Garbling.topology
         concreteCircuitSimulator circuitSimulatorOracleHandler adversary parameter scalar auxiliary).toOuterMeasure
           event).toReal| ≤
-      (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 + (2 : ℝ) ^ (-240 : ℤ) := by
+      (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384 + (2 : ℝ) ^ (-240 : ℤ) := by
   rw [← idealGateSourceRun_eq_idealTranscript adversary parameter scalar auxiliary]
   exact adaptiveGateSource_observation_bound scalar.value witness parameter
     (fun table rest => gateSourceChoose adversary parameter auxiliary table rest.2)

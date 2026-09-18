@@ -35,26 +35,26 @@ theorem xTableWithCost_count (arrays : GateArrays 5 4) :
     (xTableWithCost arrays).2 = 47 := rfl
 
 /-- This computation reads the sampled arrays and writes all eleven public fields. -/
-def yTableWithCost (arrays : GateArrays 4 4) : Biquadratic.Table × Nat :=
+def yTableWithCost (arrays : GateArrays 4 3) : Biquadratic.Table × Nat :=
   let c0 := someFieldWithCost (arrays.1.get 0)
   let c1 := someFieldWithCost (arrays.1.get 1)
   let c2 := noneFieldWithCost _
   let c3 := noneFieldWithCost _
   let c4 := someFieldWithCost (arrays.1.get 2)
   let c5 := someFieldWithCost (arrays.1.get 3)
-  let x7 := someFieldWithCost (arrays.2.1.get 2)
-  let x9 := someFieldWithCost (arrays.2.1.get 3)
+  let x7 := someFieldWithCost (arrays.2.1.get 1)
+  let x9 := someFieldWithCost (arrays.2.1.get 2)
   let y6 := noneFieldWithCost _
   let y8 := someFieldWithCost (arrays.2.1.get 0)
-  let y10 := someFieldWithCost (arrays.2.1.get 1)
+  let y10 := noneFieldWithCost _
   (⟨c0.1, c1.1, c2.1, c3.1, c4.1, c5.1, x7.1, x9.1, y6.1, y8.1, y10.1⟩,
     c0.2 + c1.2 + c2.2 + c3.2 + c4.2 + c5.2 + x7.2 + x9.2 + y6.2 + y8.2 + y10.2)
 
-theorem yTableWithCost_value (arrays : GateArrays 4 4) :
-    (yTableWithCost arrays).1 = (yEquiv (gateArraysEquiv 4 4 arrays)).request.table := rfl
+theorem yTableWithCost_value (arrays : GateArrays 4 3) :
+    (yTableWithCost arrays).1 = (yEquiv (gateArraysEquiv 4 3 arrays)).request.table := rfl
 
-theorem yTableWithCost_count (arrays : GateArrays 4 4) :
-    (yTableWithCost arrays).2 = 43 := rfl
+theorem yTableWithCost_count (arrays : GateArrays 4 3) :
+    (yTableWithCost arrays).2 = 39 := rfl
 
 /-- This computation reads the sampled arrays and writes all eleven public fields. -/
 def zTableWithCost (arrays : GateArrays 5 5) : Biquadratic.Table × Nat :=
@@ -89,7 +89,7 @@ theorem rowTableWithCost_value (arrays : RowArrays) :
     (rowTableWithCost arrays).1 = (rowArraysEquiv arrays).request.table := rfl
 
 theorem rowTableWithCost_count (arrays : RowArrays) :
-    (rowTableWithCost arrays).2 = 153 := by simp only [rowTableWithCost, xTableWithCost_count, yTableWithCost_count, zTableWithCost_count]
+    (rowTableWithCost arrays).2 = 149 := by simp only [rowTableWithCost, xTableWithCost_count, yTableWithCost_count, zTableWithCost_count]
 
 /-- Each curve field allows three array or record reads and one field write. -/
 def curveTableWithCost (arrays : GateArrays 3 5) : CurveMembership.Table × Nat :=
@@ -134,7 +134,7 @@ theorem tableWithCost_value (arrays : OfflineArrays) :
   rfl
 
 theorem tableWithCost_count (arrays : OfflineArrays) :
-    (tableWithCost arrays).2 = 15063 := by
+    (tableWithCost arrays).2 = 14699 := by
   simp only [tableWithCost, curveTableWithCost_count, rowTableWithCost_count,
     Vector.toList_map, List.map_map, Function.comp_def]
   rw [List.map_const', List.sum_replicate_nat]

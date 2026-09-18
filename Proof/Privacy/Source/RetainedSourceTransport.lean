@@ -68,7 +68,7 @@ theorem sharedRetainedHash_observation_bound [FieldCertificate] [GroupCertificat
           ((RawCircuitGate → BaseField × HashLiftQuotient) × CircuitMaskTables)).bind fun source =>
             retainedGoodHashObserver observe (maskRetainedTape randomness)
               (source.1, sharedCircuitHashRest randomness source.2))).toOuterMeasure event).toReal| ≤
-      (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384 := by
+      (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384 := by
   have full := sharedHashSource_observation_eq witness parameter observe
   have good := sharedHashSource_observation_eq witness parameter
     (retainedGoodHashObserver observe)
@@ -78,10 +78,10 @@ theorem sharedRetainedHash_observation_bound [FieldCertificate] [GroupCertificat
     ((RawCircuitGate → BaseField × HashLiftQuotient) × CircuitHashRest)).bind
       (fun source => retainedHashKernel observe ((fun gate => goodHashLiftSource (source.1 gate)), source.2)) at good
   have bound := hashLift_family_product_observation_bound (retainedHashKernel observe) event
-  have count : (Fintype.card RawCircuitGate : ℝ) = 301752 := by exact_mod_cast rawCircuitGate_card
+  have count : (Fintype.card RawCircuitGate : ℝ) = 278638 := by exact_mod_cast rawCircuitGate_card
   rw [count] at bound
   exact retainedObservation_transport (Observation := Observation) (event := event)
-    (error := (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384) full good bound
+    (error := (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : ℕ) / 2 ^ 384) full good bound
 
 /-- These coins determine the retained row coefficients and curve mask. -/
 abbrev RetainedRowCoin [FieldCertificate] [GroupCertificate] :=

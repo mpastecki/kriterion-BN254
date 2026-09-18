@@ -239,7 +239,7 @@ theorem adaptiveCircuitMaskGarble_eq_retarget {Aux : Type*} (key mask : BaseFiel
       (choose (publicMaskTable sample)).map (fun selected =>
         (selected, sample.retargetMask selected.1
           (key + mask * (selected.1.x ^ 3 + 3 - selected.1.y ^ 2))
-          (FieldMacToECMac.evaluateRows rows selected.1)))) := by
+          (FieldMacToECMac.representedRows rows selected.1)))) := by
   have same := congrArg (fun distribution => distribution.map
     (fun pair : (AffineInput × Aux) × CircuitMaskSample =>
       (pair.1, circuitMaskSampleGarble key mask rows pair.1.1 pair.2)))

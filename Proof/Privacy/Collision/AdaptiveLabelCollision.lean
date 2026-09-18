@@ -55,7 +55,7 @@ structure PrequeryLabelUse where
 def circuitGateWire : RawCircuitGate → EncPRF.PermutationIndex
   | .inl (adaptor, bit) => (![(.x : EncPRF.Coordinate), .x, .x, .y, .y] adaptor, bit)
   | .inr (_, .inl (adaptor, bit)) => (![(.y : EncPRF.Coordinate), .y, .y, .x] adaptor, bit)
-  | .inr (_, .inr (.inl (adaptor, bit))) => (![(.y : EncPRF.Coordinate), .y, .x, .x] adaptor, bit)
+  | .inr (_, .inr (.inl (adaptor, bit))) => (![(.x : EncPRF.Coordinate), .x, .x] adaptor, bit)
   | .inr (_, .inr (.inr (adaptor, bit))) => (![(.y : EncPRF.Coordinate), .y, .y, .x, .x] adaptor, bit)
 
 /-- Curve labels have no linking pad. Point labels use the actual fixed EncPRF pad. -/
@@ -80,11 +80,7 @@ theorem circuitGateLabel_sourceShift (oracle : SimulatorOracleCoin) (bridgeKey :
       · exact linkedLabel_fixedShift oracle bridgeKey key (.y, position) bit
       · exact linkedLabel_fixedShift oracle bridgeKey key (.y, position) bit
       · exact linkedLabel_fixedShift oracle bridgeKey key (.x, position) bit
-    · fin_cases adaptor
-      · exact linkedLabel_fixedShift oracle bridgeKey key (.y, position) bit
-      · exact linkedLabel_fixedShift oracle bridgeKey key (.y, position) bit
-      · exact linkedLabel_fixedShift oracle bridgeKey key (.x, position) bit
-      · exact linkedLabel_fixedShift oracle bridgeKey key (.x, position) bit
+    · fin_cases adaptor <;> exact linkedLabel_fixedShift oracle bridgeKey key (.x, position) bit
     · fin_cases adaptor
       · exact linkedLabel_fixedShift oracle bridgeKey key (.y, position) bit
       · exact linkedLabel_fixedShift oracle bridgeKey key (.y, position) bit

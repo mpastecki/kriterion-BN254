@@ -85,7 +85,7 @@ theorem bucketedCTPRFHas100Bits :
   have countBound :
       Pipeline.pointBucketCount * Pipeline.digitsPerBucket ^ 2 + Pipeline.curveBucketCount +
           4 * Pipeline.digitsPerBucket * queries ≤ permutationWork queries * 2 ^ 29 := by
-    change 136725660 + 364 * queries ≤ max queries 1 * 536870912
+    change 126208790 + 364 * queries ≤ max queries 1 * 536870912
     omega
   rw [WorkPerAdvantage]
   change (((Pipeline.pointBucketCount * Pipeline.digitsPerBucket ^ 2 +
@@ -109,7 +109,7 @@ theorem bucketedCTPRFHas100Bits :
 def bitAdaptorEvaluationCount : Nat :=
   Pipeline.digitAdaptorCount * coordinateBitCount
 
-theorem bitAdaptorEvaluationCountValue : bitAdaptorEvaluationCount = 301752 := by decide
+theorem bitAdaptorEvaluationCountValue : bitAdaptorEvaluationCount = 278638 := by decide
 
 /-- This event records one selected gate's rejected hash-lift suffix. -/
 def dependentHashLiftBadEvent

@@ -148,11 +148,11 @@ theorem executeFixedCommandsCost_le (state : SimulatorState) (commands : List Fi
       _ ≤ (rest.length + 1) * (state.fixedTranscript.length + (rest.length + 1)) := by
         nlinarith
 
-/-- The complete valid schedule uses at most 905256 programming attempts. -/
+/-- The complete valid schedule uses at most 835914 programming attempts. -/
 theorem selectedSchedule_commands_length [FieldCertificate] [GroupCertificate]
     (state : CircuitSimulatorState) (input : AffineInput) (output : Point)
     (free : Vector Point 90) (scales : Fin FieldMacToECMac.outputMacCount → NonZeroBase) :
-    (scheduleCommands (state.selectedSchedule input output free scales)).length ≤ 905256 := by
+    (scheduleCommands (state.selectedSchedule input output free scales)).length ≤ 835914 := by
   have bound := scheduleCommands_length (state.selectedSchedule input output free scales)
   rw [CircuitSimulatorState.selectedSchedule, linkedPipelineGateSchedule_length] at bound
   exact bound

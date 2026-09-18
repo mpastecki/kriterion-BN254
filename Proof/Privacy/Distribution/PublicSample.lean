@@ -111,9 +111,9 @@ def XPublicSample.request (sample : XPublicSample) : BiquadraticXRequest := {
 /-- This sample contains one scalar-independent RCB Y table. -/
 structure YPublicSample where
   coefficients : Fin 4 → BaseField
-  tables : Fin 4 → Vector BitAdaptor.Table coordinateBitCount
-  quotients : Fin 4 → Fin coordinateBitCount → HashLiftQuotient
-  targets : Fin 4 → Fin coordinateBitCount → BaseField
+  tables : Fin 3 → Vector BitAdaptor.Table coordinateBitCount
+  quotients : Fin 3 → Fin coordinateBitCount → HashLiftQuotient
+  targets : Fin 3 → Fin coordinateBitCount → BaseField
 deriving Fintype
 
 def YPublicSample.request (sample : YPublicSample) : BiquadraticYRequest := {
@@ -122,21 +122,17 @@ def YPublicSample.request (sample : YPublicSample) : BiquadraticYRequest := {
   c4 := sample.coefficients 2
   c5 := sample.coefficients 3
   y8Table := sample.tables 0
-  y10Table := sample.tables 1
-  x7Table := sample.tables 2
-  x9Table := sample.tables 3
+  x7Table := sample.tables 1
+  x9Table := sample.tables 2
   y8Targets := sample.targets 0
-  y10Targets := sample.targets 1
-  x7Targets := sample.targets 2
-  x9Targets := sample.targets 3
+  x7Targets := sample.targets 1
+  x9Targets := sample.targets 2
   y8Quotients := sample.quotients 0
-  y10Quotients := sample.quotients 1
-  x7Quotients := sample.quotients 2
-  x9Quotients := sample.quotients 3
+  x7Quotients := sample.quotients 1
+  x9Quotients := sample.quotients 2
   y8Lifts := fun index => goodHashLift (sample.targets 0 index) (sample.quotients 0 index)
-  y10Lifts := fun index => goodHashLift (sample.targets 1 index) (sample.quotients 1 index)
-  x7Lifts := fun index => goodHashLift (sample.targets 2 index) (sample.quotients 2 index)
-  x9Lifts := fun index => goodHashLift (sample.targets 3 index) (sample.quotients 3 index)
+  x7Lifts := fun index => goodHashLift (sample.targets 1 index) (sample.quotients 1 index)
+  x9Lifts := fun index => goodHashLift (sample.targets 2 index) (sample.quotients 2 index)
 }
 
 /-- This sample contains one scalar-independent RCB Z table. -/

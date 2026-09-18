@@ -170,7 +170,7 @@ theorem Code.cutoff_failure_linear {A : Type} {count : Nat} (attempts : Nat) (co
 
 /-- The concrete offline sampler has a strict finite bit limit and a checked failure bound. -/
 theorem offline_cutoff_failure :
-    (offline.cutoff 256).law none ≤ 907550 / (2 : ENNReal) ^ 256 := by
+    (offline.cutoff 256).law none ≤ 838208 / (2 : ENNReal) ^ 256 := by
   simpa only [ENNReal.inv_pow, div_eq_mul_inv, Nat.cast_ofNat] using offline.cutoff_failure_linear 256
 
 end SimulatorSampling

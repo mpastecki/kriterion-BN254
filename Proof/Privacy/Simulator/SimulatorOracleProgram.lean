@@ -209,11 +209,11 @@ noncomputable def Program.toOracle {oracle : OracleSpec.{0, 0}} {A : Type} {budg
     simpa only [toOracle, ThreePhase.run_castBudget, ThreePhase.run_raise, Program.run] using
       inductionHypothesis state
 
-/-- The valid path uses the actual link and at most 905256 programming attempts. -/
+/-- The valid path uses the actual link and at most 835914 programming attempts. -/
 def validProgram [FieldCertificate] [GroupCertificate] (state : CircuitSimulatorState)
     (input : AffineInput) (output : Point) (free : Vector Point 90)
     (scales : Fin FieldMacToECMac.outputMacCount → NonZeroBase) :
-    Program spec Garbling.Labels 905765 :=
+    Program spec Garbling.Labels 836423 :=
   .bind (link (state.selectedCurve input) input (state.labels input).inputMac) fun mac =>
     .map (fun _ => state.labels input)
       (.weaken (commands (scheduleCommands

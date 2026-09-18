@@ -178,9 +178,9 @@ theorem fullGateGhostBad_mass_le [Fintype BaseField] [FieldCertificate] [GroupCe
         adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter) :
     ((fullGateGhostSamples adversary parameter auxiliary scalar witness fallback).toOuterMeasure
       {coin | fullGateGhostBad coin}).toReal ≤
-      (243390420 / (2 : ℝ) ^ 128 +
+      (224668080 / (2 : ℝ) ^ 128 +
         (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ℝ) ^ 128 +
-        (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384) +
+        (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384) +
       (1 + (adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter : Nat)) /
         (baseFieldModulus : ℝ) := by
   have first := congrArg (fun distribution =>
@@ -221,9 +221,9 @@ theorem fullGateGhostGood_missing_le [Fintype BaseField] [FieldCertificate] [Gro
         (fun table rest => gateSourceChoose adversary parameter auxiliary table rest.2)
         (fun table selected view rest => gateSourceObserve adversary parameter auxiliary table selected view rest.2)
         fallback) transcript - sourceGoodMass samples kernel {coin | fullGateGhostBad coin} transcript)).toReal ≤
-      (243390420 / (2 : ℝ) ^ 128 +
+      (224668080 / (2 : ℝ) ^ 128 +
         (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ℝ) ^ 128 +
-        (301752 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384) +
+        (278638 : ℝ) * (2 ^ 384 % baseFieldModulus : Nat) / 2 ^ 384) +
       (1 + (adversary.firstQueryBudget parameter + adversary.secondQueryBudget parameter : Nat)) /
         (baseFieldModulus : ℝ) := by
   dsimp only

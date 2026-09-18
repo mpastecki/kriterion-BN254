@@ -173,7 +173,7 @@ theorem programRetargetedBiquadraticRow_evaluate
       ((request.retarget input target).schedule output input inputMac)
     Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .x)
         request.table.x input inputMac = target.x ∧
-      Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .y)
+      Biquadratic.evaluateY (Pipeline.biquadraticOracles final.fixedOracle output .y)
         request.table.y input inputMac = target.y ∧
       Biquadratic.evaluate (Pipeline.biquadraticOracles final.fixedOracle output .z)
         request.table.z input inputMac = target.z := by

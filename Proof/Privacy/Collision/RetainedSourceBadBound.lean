@@ -19,14 +19,14 @@ theorem retainedSourceRows_fields [FieldCertificate] [GroupCertificate] (scalar 
 
 def retainedSourceBirthday (sample : PublicSample) (rows : Rows) (input : AffineInput) : Prop :=
   pointBranchCollision (fun row => (RowPublicSample.visibleHiddenEquiv (sample.points.get row)).1)
-    (fun row => rows.get row) input (fun row => (evaluateRows rows input).get row)
+    (fun row => rows.get row) input (fun row => (representedRows rows input).get row)
     (fun row => (RowPublicSample.visibleHiddenEquiv (sample.points.get row)).2)
 
 private theorem retainedSourceBirthday_hidden (visible : VisiblePublicSample) (hidden : HiddenPublicSample)
     (rows : Rows) (input : AffineInput) :
     retainedSourceBirthday (PublicSample.visibleHiddenEquiv.symm (visible, hidden)) rows input =
       pointBranchCollision visible.2 (fun row => rows.get row) input
-        (fun row => (evaluateRows rows input).get row) hidden.2 := by
+        (fun row => (representedRows rows input).get row) hidden.2 := by
   unfold retainedSourceBirthday
   have rowLaw (row : Fin outputMacCount) :
       (PublicSample.visibleHiddenEquiv.symm (visible, hidden)).points.get row =
@@ -62,7 +62,7 @@ theorem retainedBirthdayFlag_resample (rows : Rows) :
           (SimulatorCoin.visibleHiddenEquiv.symm (visible, Classical.arbitrary HiddenPublicSample))).bind fun selected =>
           (PMF.uniformOfFintype HiddenPublicSample).map fun hidden =>
             @decide (pointBranchCollision visible.1.2 (fun row => rows.get row) selected.1.1
-              (fun row => (evaluateRows rows selected.1.1).get row) hidden.2) (Classical.propDecidable _) := by
+              (fun row => (representedRows rows selected.1.1).get row) hidden.2) (Classical.propDecidable _) := by
   classical
   unfold retainedBirthdayFlag
   rw [uniform_simulatorCoin_split]
@@ -94,7 +94,7 @@ private theorem bind_bound {Source Target : Type*}
 
 theorem retainedBirthdayFlag_mass_le [Fintype Block] (rows : Rows) :
     (retainedBirthdayFlag adversary parameter auxiliary rows).toOuterMeasure {flag | flag = true} ≤
-      243390420 / (2 : ENNReal) ^ 128 := by
+      224668080 / (2 : ENNReal) ^ 128 := by
   rw [retainedBirthdayFlag_resample]
   apply bind_bound
   intro visible
@@ -103,7 +103,7 @@ theorem retainedBirthdayFlag_mass_le [Fintype Block] (rows : Rows) :
   rw [PMF.toOuterMeasure_map_apply, Set.preimage_setOf_eq]
   simp only [decide_eq_true_eq]
   exact @pointBranchCollision_fullTape_mass_le_blocks ‹Fintype Block› visible.1.2
-    (fun row => rows.get row) selected.1.1 (fun row => (evaluateRows rows selected.1.1).get row)
+    (fun row => rows.get row) selected.1.1 (fun row => (representedRows rows selected.1.1).get row)
 
 /-- These flags retain the actual source prescription before output replacement. -/
 def retainedJointSourceFlags (rows : Rows) (mask : BaseField) : PMF (Bool × Bool) :=
@@ -131,7 +131,7 @@ theorem retainedJointSourceFlags_snd (rows : Rows) (mask : BaseField) :
 theorem retainedJointSourceFlags_mass_le [Fintype Block] (rows : Rows) (mask : BaseField) :
     (retainedJointSourceFlags adversary parameter auxiliary rows mask).toOuterMeasure
       {flags | flags.1 = true ∨ flags.2 = true} ≤
-        243390420 / (2 : ENNReal) ^ 128 +
+        224668080 / (2 : ENNReal) ^ 128 +
           (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ENNReal) ^ 128 := by
   have first := retainedBirthdayFlag_mass_le adversary parameter auxiliary rows
   rw [← retainedJointSourceFlags_fst adversary parameter auxiliary rows mask,
@@ -154,13 +154,13 @@ theorem retainedSource_rawOffset_injective (sample : PublicSample) (bridgeKey ma
   rw [← reconstructedCircuitSource_eq_split bridgeKey mask rows sparse input sample]
   exact reconstructedCircuitSource_rawOffset_injective sample mask (fun row => rows.get row) input
     (bridgeKey + mask * (input.x ^ 3 + 3 - input.y ^ 2))
-    (fun row => (evaluateRows rows input).get row) good pointKey curveKey index
+    (fun row => (representedRows rows input).get row) good pointKey curveKey index
 
 /-- Averaging independent retained rows and masks preserves the same loss. -/
 theorem retainedJointSourceFlags_mixture_mass_le [Fintype Block] (source : PMF (Rows × BaseField)) :
     (source.bind (fun fields => retainedJointSourceFlags adversary parameter auxiliary fields.1 fields.2)).toOuterMeasure
       {flags | flags.1 = true ∨ flags.2 = true} ≤
-        243390420 / (2 : ENNReal) ^ 128 +
+        224668080 / (2 : ENNReal) ^ 128 +
           (182 * adversary.firstQueryBudget parameter : Nat) / (2 : ENNReal) ^ 128 := by
   apply bind_bound
   intro fields
@@ -176,7 +176,7 @@ theorem retainedSource_schedule_fresh (coin : SimulatorCoin) (state : SimulatorS
           (fun gate => goodHashLiftSource ((circuitMaskHashSplitEquiv source).1 gate)) state.fixedTranscript)
         coin.inputKey) :
     let selected := coin.tableSample.retargetMask input
-      (coin.bridgeKey + mask * (input.x ^ 3 + 3 - input.y ^ 2)) (evaluateRows rows input)
+      (coin.bridgeKey + mask * (input.x ^ 3 + 3 - input.y ^ 2)) (representedRows rows input)
     let pointKey := EncPRF.transformKey coin.oracles.encOracle
       (EncPRF.whiteningKeys coin.oracles.hashOracle coin.bridgeKey) coin.inputKey
     FreshRecordSchedule state.fixedTranscript (gateProgramRecords
