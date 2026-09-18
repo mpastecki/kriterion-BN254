@@ -1,0 +1,21 @@
+name = "argomac-baseline-check"
+version = "0.1.0"
+defaultTargets = ["Construction", "Proof", "Submission"]
+
+[[require]]
+name = "bn254-scalar-multiplication"
+path = ".."
+
+[[lean_lib]]
+name = "Construction"
+
+[[lean_lib]]
+name = "Proof"
+
+[[lean_lib]]
+name = "Submission"
+
+[[lean_lib]]
+name = "BaselineTests"
+srcDir = "tests"
+roots = ["AdaptivePrivacy"]
